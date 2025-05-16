@@ -11,152 +11,212 @@
     label { display: block; margin-bottom: 0.3rem; }
     input[type=range] { width: 100%; }
     button { padding: 0.6rem 1.2rem; font-size: 1rem; margin-top: 1rem; }
-    #timer { font-size: 1.2rem; text-align: center; margin-bottom: 1rem; }
-    #summaryScreen p { margin: .5rem 0; }
+    #timerBar { width: 100%; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin: .5rem 0; }
+    #progress { height: 100%; width: 100%; background: #76c7c0; transform-origin: left; }
+    #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+    #tipOverlay { 
+      position: fixed; bottom:20px; left:50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); color:#fff; padding:1rem 1.5rem;
+      border-radius:8px; font-size:1rem; display:none;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 1. WELCOME SCREEN -->
-  <div id="welcomeScreen">
+  <!-- AUDIO -->
+  <audio id="lockSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+  <audio id="winSound"  src="https://actions.google.com/sounds/v1/cartoon/concussive_hit_guitar_boing.ogg"></audio>
+
+  <!-- CONFETTI CANVAS -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- TIP OVERLAY -->
+  <div id="tipOverlay">💡 Tip: Automate your savings transfer to pay yourself first!</div>
+
+  <!-- 1. SET INCOME -->
+  <div id="screen-income">
     <h1>🏆 Budget Battle</h1>
-    <p>Welcome! In 20 minutes you’ll learn to own your budget like a boss. You’ll:</p>
-    <ul>
-      <li>Pick a scenario</li>
-      <li>Allocate with the 50/30/20 rule</li>
-      <li>Handle a surprise “life event”</li>
-      <li>See how you score vs. the ideal</li>
-    </ul>
-    <button id="begin">Let’s Go!</button>
+    <p>Enter your monthly income:</p>
+    <input type="number" id="incomeInput" placeholder="e.g. 3500" />
+    <button id="incomeNext">Next</button>
   </div>
 
-  <!-- 2. SCENARIO SELECTION -->
-  <div id="step1" class="hidden">
-    <h2>Choose Your Scenario</h2>
-    <select id="scenario">
-      <option value="3000,1000,300">Alex: $3,000/mo, rent $1,000, loans $300</option>
-      <option value="4500,1800,500">Taylor: $4,500/mo, rent $1,800, savings goal $500</option>
-      <option value="2500,800,200">Jordan: $2,500/mo, rent $800, debt $200</option>
-    </select>
-    <button id="start">Start Budget</button>
-  </div>
+  <!-- 2. SCENARIO STEPS -->
+  <div id="screen-step" class="hidden">
+    <h2 id="stepTitle"></h2>
+    <p id="stepDesc"></p>
 
-  <!-- 3. SLIDER ALLOCATION -->
-  <div id="step2" class="hidden">
-    <h2>Allocate Your 50/30/20</h2>
-    <div id="timer">⏱️ Time left: <span id="count">60</span>s</div>
-    <p><strong>Income:</strong> <span id="income"></span></p>
-    <div class="slider-group">
-      <label>Needs (<span id="needsPct">50</span>%): <span id="needsAmt"></span></label>
-      <input type="range" id="needs" min="30" max="70" value="50">
+    <div id="budgetForm">
+      <p><strong>Income:</strong> $<span id="showIncome"></span></p>
+      <div class="slider-group">
+        <label>Needs (<span id="needsPct">50</span>%): <span id="needsAmt"></span></label>
+        <input type="range" id="needs" min="30" max="70" value="50">
+      </div>
+      <div class="slider-group">
+        <label>Wants (<span id="wantsPct">30</span>%): <span id="wantsAmt"></span></label>
+        <input type="range" id="wants" min="10" max="60" value="30">
+      </div>
+      <div class="slider-group">
+        <label>Savings (<span id="savePct">20</span>%): <span id="saveAmt"></span></label>
+        <input type="range" id="save" min="10" max="60" value="20">
+      </div>
+      <div id="timerBar"><div id="progress"></div></div>
+      <button id="lockBtn">Lock Allocation</button>
     </div>
-    <div class="slider-group">
-      <label>Wants (<span id="wantsPct">30</span>%): <span id="wantsAmt"></span></label>
-      <input type="range" id="wants" min="10" max="50" value="30">
-    </div>
-    <div class="slider-group">
-      <label>Savings/Debt (<span id="savePct">20</span>%): <span id="saveAmt"></span></label>
-      <input type="range" id="save" min="10" max="40" value="20" disabled>
-    </div>
-    <button id="submitBudget">Lock In!</button>
   </div>
 
-  <!-- 4. SUMMARY SCREEN -->
-  <div id="summaryScreen" class="hidden">
-    <h2>Battle Summary</h2>
-    <p id="eventText"></p>
-    <p>Your original Savings bucket: <strong id="origSave"></strong></p>
-    <p>After the event: <strong id="newSave"></strong></p>
-    <p id="scoreText"></p>
-    <button id="playAgain">Play Again</button>
+  <!-- 3. SUMMARY -->
+  <div id="screen-summary" class="hidden">
+    <h2>🎉 Battle Summary</h2>
+    <p id="summaryText"></p>
+    <p id="finalScore"></p>
+    <button id="restart">Play Again</button>
   </div>
 
+  <!-- CONFETTI LIBRARY -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script>
-    let income, rent, fixed;
-    let origSavings;
-    let countdown;
+    // ======= Data & State =======
+    const steps = [
+      { title: "Step 1: Car Trouble",  desc: "Your car needs a $300 repair. Adjust your budget?", delta: { needs: +300, save: -300 }},
+      { title: "Step 2: Side Gig Bonus", desc: "You earn $400 freelancing. Adjust your budget?", delta: { save: +400 }},
+      { title: "Step 3: Phone Upgrade", desc: "A new phone costs $250. Adjust your budget?", delta: { wants: +250, save: -250 }},
+    ];
+    let income, currentStep=0, allocations=[], timerInterval;
 
-    const welcome = document.getElementById('welcomeScreen');
-    const step1   = document.getElementById('step1');
-    const step2   = document.getElementById('step2');
-    const summary = document.getElementById('summaryScreen');
+    // ======= Elements =======
+    const screenIncome  = document.getElementById('screen-income');
+    const screenStep    = document.getElementById('screen-step');
+    const screenSummary = document.getElementById('screen-summary');
+    const incomeInput   = document.getElementById('incomeInput');
+    const incomeNext    = document.getElementById('incomeNext');
+    const stepTitle     = document.getElementById('stepTitle');
+    const stepDesc      = document.getElementById('stepDesc');
+    const showIncome    = document.getElementById('showIncome');
+    const needs         = document.getElementById('needs');
+    const wants         = document.getElementById('wants');
+    const save          = document.getElementById('save');
+    const needsPct      = document.getElementById('needsPct');
+    const wantsPct      = document.getElementById('wantsPct');
+    const savePct       = document.getElementById('savePct');
+    const needsAmt      = document.getElementById('needsAmt');
+    const wantsAmt      = document.getElementById('wantsAmt');
+    const saveAmt       = document.getElementById('saveAmt');
+    const progressBar   = document.getElementById('progress');
+    const lockBtn       = document.getElementById('lockBtn');
+    const summaryText   = document.getElementById('summaryText');
+    const finalScore    = document.getElementById('finalScore');
+    const restart       = document.getElementById('restart');
+    const lockSound     = document.getElementById('lockSound');
+    const winSound      = document.getElementById('winSound');
+    const tipOverlay    = document.getElementById('tipOverlay');
 
-    document.getElementById('begin').onclick = () => {
-      welcome.classList.add('hidden');
-      step1.classList.remove('hidden');
-    };
+    // ======= Helper: Update Sliders =======
+    function updateSliders(){
+      const n = +needs.value, w=+wants.value;
+      const s = 100 - n - w;
+      save.value = s;
+      needsPct.textContent = n; wantsPct.textContent = w; savePct.textContent = s;
+      needsAmt.textContent = `$${Math.round(income*n/100)}`;
+      wantsAmt.textContent= `$${Math.round(income*w/100)}`;
+      saveAmt.textContent = `$${Math.round(income*s/100)}`;
+    }
+    [needs,wants,save].forEach(el=>el.addEventListener('input',updateSliders));
 
-    document.getElementById('start').onclick = () => {
-      [income, rent, fixed] = document.getElementById('scenario').value.split(',').map(Number);
-      document.getElementById('income').textContent = `$${income}`;
-      origSavings = Math.round(income * 0.20);
-      updateAmounts();
-      step1.classList.add('hidden');
-      step2.classList.remove('hidden');
-      startTimer(60);
-    };
+    // ======= Timer =======
+    function startTimer(sec=30){
+      clearInterval(timerInterval);
+      let time=sec;
+      progressBar.style.transform = 'scaleX(1)';
+      timerInterval = setInterval(()=>{
+        time--;
+        const pct = time/sec;
+        progressBar.style.transform = `scaleX(${pct})`;
+        if(time<=0){ clearInterval(timerInterval); lockAllocation(); }
+      },1000);
+    }
 
-    ['needs','wants'].forEach(id => {
-      document.getElementById(id).oninput = updateAmounts;
+    // ======= Show Next Step =======
+    function showStep(){
+      if(currentStep>=steps.length){
+        return showSummary();
+      }
+      screenIncome.classList.add('hidden');
+      screenSummary.classList.add('hidden');
+      screenStep.classList.remove('hidden');
+
+      const {title,desc} = steps[currentStep];
+      stepTitle.textContent = title;
+      stepDesc.textContent  = desc;
+      showIncome.textContent = income;
+      // reset to last allocations or default 50/30/20
+      const last = allocations[currentStep-1] || {n:50,w:30,s:20};
+      needs.value=last.n; wants.value=last.w; save.value=last.s;
+      updateSliders();
+      startTimer(30);
+    }
+
+    // ======= Lock In & Record =======
+    function lockAllocation(){
+      lockSound.play();
+      clearInterval(timerInterval);
+      // record
+      allocations[currentStep] = {
+        n:+needs.value,
+        w:+wants.value,
+        s:+save.value
+      };
+      // apply delta
+      const {delta} = steps[currentStep];
+      income = Math.max(0, income 
+        + (delta.needs||0)*(-1)  // repair cost reduces income bucket
+        + (delta.wants||0)*(-1) 
+        + (delta.save||0)        // bonuses add to income
+      );
+      currentStep++;
+      setTimeout(showStep, 800);
+    }
+    lockBtn.addEventListener('click',lockAllocation);
+
+    // ======= Summary =======
+    function showSummary(){
+      screenStep.classList.add('hidden');
+      screenSummary.classList.remove('hidden');
+
+      // compute final savings bucket vs ideal
+      const last = allocations[allocations.length-1];
+      const finalSave = Math.round(income * (last.s/100));
+      const idealSave = Math.round(income * 0.20);
+      const diff = Math.abs(finalSave - idealSave);
+      const score = Math.max(0, 100 - Math.round(diff/idealSave*100));
+
+      summaryText.innerHTML = `
+        Your final Savings bucket: <strong>$${finalSave}</strong><br>
+        Ideal Savings (20%): <strong>$${idealSave}</strong>
+      `;
+      finalScore.textContent = `Score: ${score}/100`;
+
+      if(score >= 80){
+        winSound.play();
+        confetti.create(document.getElementById('confetti-canvas'),{resize:true})({ particleCount:200 });
+      }
+      // show tip
+      tipOverlay.style.display = 'block';
+    }
+
+    // ======= Start & Restart =======
+    incomeNext.addEventListener('click',()=>{
+      income = Number(incomeInput.value)||0;
+      currentStep=0; allocations=[];
+      if(income<=0){ return alert('Enter a valid income'); }
+      showStep();
     });
-
-    function updateAmounts() {
-      const needsPct = +document.getElementById('needs').value;
-      const wantsPct = +document.getElementById('wants').value;
-      const savePct  = 100 - needsPct - wantsPct;
-      document.getElementById('save').value   = savePct;
-      document.getElementById('needsPct').textContent = needsPct;
-      document.getElementById('wantsPct').textContent = wantsPct;
-      document.getElementById('savePct').textContent  = savePct;
-      document.getElementById('needsAmt').textContent = `$${Math.round(income * needsPct/100)}`;
-      document.getElementById('wantsAmt').textContent= `$${Math.round(income * wantsPct/100)}`;
-      document.getElementById('saveAmt').textContent = `$${Math.round(income * savePct/100)}`;
-    }
-
-    function startTimer(seconds) {
-      const countEl = document.getElementById('count');
-      let s = seconds;
-      countEl.textContent = s;
-      countdown = setInterval(() => {
-        s--;
-        countEl.textContent = s;
-        if (s === 0) {
-          clearInterval(countdown);
-          document.getElementById('submitBudget').click();
-        }
-      }, 1000);
-    }
-
-    document.getElementById('submitBudget').onclick = () => {
-      clearInterval(countdown);
-      const events = [
-        { text: '🏎 Unexpected car repair: –$400', delta: -400 },
-        { text: '🎉 Work bonus! +$300', delta: +300 },
-        { text: '📱 Phone upgrade: –$200', delta: -200 },
-      ];
-      const e = events[Math.floor(Math.random()*events.length)];
-      const currentSave = Math.round(income * (+document.getElementById('savePct').textContent)/100);
-      const adjustedSave = currentSave + e.delta;
-
-      document.getElementById('eventText').textContent = e.text;
-      document.getElementById('origSave').textContent = `$${currentSave}`;
-      document.getElementById('newSave').textContent  = `$${adjustedSave}`;
-
-      // simple score: 
-      const ideal = origSavings;
-      const diff  = Math.abs(adjustedSave - ideal);
-      const score = Math.max(0, 100 - Math.round(diff / ideal * 100));
-      document.getElementById('scoreText').textContent = 
-        `Your score: ${score}/100 (closer to 100 is better)`;
-
-      step2.classList.add('hidden');
-      summary.classList.remove('hidden');
-    };
-
-    document.getElementById('playAgain').onclick = () => {
-      summary.classList.add('hidden');
-      welcome.classList.remove('hidden');
-    };
+    restart.addEventListener('click',()=>{
+      tipOverlay.style.display='none';
+      screenSummary.classList.add('hidden');
+      screenIncome.classList.remove('hidden');
+      incomeInput.value='';
+    });
   </script>
 </body>
 </html>

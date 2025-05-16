@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Budget Battle</n></code><code>
+  <title>Budget Battle</title>
   <style>
     html, body { margin:0; padding:0; height:100%; width:100%; }
     body { font-family:sans-serif; padding:1rem; max-width:480px; margin:0 auto; display:flex; flex-direction:column; }
@@ -55,7 +55,7 @@
 
   <!-- 2. Initial Allocation -->
   <div id="screen-alloc" class="hidden">
-    <h2>Initial Budget</n></code><code>
+    <h2>Initial Budget</h2>
     <p><strong>Income:</strong> $<span id="allocIncome"></span></p>
     <div class="slider-group">
       <label>Needs (<span id="initNeedsPct">50</span>%): <span id="initNeedsAmt"></span></label>
@@ -67,7 +67,7 @@
     </div>
     <div class="slider-group">
       <label>Savings (<span id="initSavePct">20</span>%): <span id="initSaveAmt"></span></label>
-      <input type="range" id="initSave" min="0" max="100" value="20">
+      <input type("range" id="initSave" min="0" max="100" value="20">
     </div>
     <button id="allocLockBtn">Lock In Budget</button>
   </div>
@@ -85,27 +85,126 @@
       <p><strong>Income:</strong> $<span id="showIncome"></span></p>
       <div class="slider-group">
         <label>Needs (<span id="needsPct">50</span>%): <span id="needsAmt"></span></label>
-        <input type="range" id="needs" min="0" max("100) value="50">
+        <input type="range" id="needs" min="0" max="100" value="50">
       </div>
       <div class="slider-group">
-        <label>Wants (<span id("wantsPct">30</span>%): <span id="<code>wantsAmt"></span></label>
-      <input type=range id="wants" min="0" max="100" value="30">
+        <label>Wants (<span id="wantsPct">30</span>%): <span id="wantsAmt"></span></label>
+        <input type("range" id="wants" min="0" max="100" value="30">
       </div>
       <div class="slider-group">
-        <label>Savings (<span id("savePct">20</span>%): <span id="saveAmt"></span></label>
+        <label>Savings (<span id("savePct">20</span>%): <span id("saveAmt"></span></label>
         <input type("range" id="save" min="0" max="100" value="20">
       </div>
-      <div id="timerBar"><div id("progress"></div></div>
+      <div id="timerBar"><div id="progress"></div></div>
       <button id="lockBtn">Lock Allocation</button>
     </div>
   </div>
 
   <!-- 4. Summary -->
-  <div id("screen-summary" class="hidden">
+  <div id("screen-summary" class("hidden">
     <h2>🎉 Battle Summary</h2>
-    <p id="summaryText"></p>
+    <p id("summaryText"></p>
     <p id("finalScore"></p>
     <button id("restart">Play Again</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/canvas))
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script>
+  (function() {
+    const steps = [
+      { title:"1. Car Trouble",    desc:"🚗 Your car needs a $300 repair.",  delta:-300, gif:"https://media.giphy.com/media/LwIyvaNcnzsD6/giphy.gif" },
+      { title:"2. Side Gig Bonus",  desc:"💼 You earn $400 freelancing.",     delta:+400, gif:"https://media.giphy.com/media/UBSg1iy5f8p0g/giphy.gif" },
+      { title:"3. Phone Upgrade",   desc:"📱 A new phone costs $250.",       delta:-250, gif:"https://media.giphy.com/media/3og0IPxMM0erATueVW/giphy.gif" },
+      { title:"4. Streaming Hike",  desc:"📺 Streaming price goes up $15.", delta:-15,  gif:"https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif" },
+      { title:"5. Birthday Gift",   desc:"🎁 You receive a $100 gift.",      delta:+100, gif:"https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif" },
+      { title:"6. Medical Bill",    desc:"🩺 Unexpected $200 medical bill.", delta:-200, gif:"https://media.giphy.com/media/3oz8xIsloV7zOmt81G/giphy.gif" },
+      { title:"7. Tax Refund",      desc:"💰 You get a $500 tax refund!",   delta:+500, gif:"https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif" },
+    ];
+    let income, currentStep=0, allocations=[], netDelta=0, timerInterval;
+
+    const byId = id => document.getElementById(id),
+          modeRadios = document.getElementsByName('incomeMode');
+
+    function rebalance(changed) {
+      let n=+byId('needs').value, w=+byId('wants').value, s=+byId('save').value;
+      let sum=n+w+s, factor=sum?100/sum:0;
+      n*=factor; w*=factor; s*=factor;
+      let rN=Math.round(n), rW=Math.round(w), rS=Math.round(s), diff=100-(rN+rW+rS);
+      if(changed==='needs') rN+=diff;
+      else if(changed==='wants') rW+=diff;
+      else rS+=diff;
+      byId('needs').value=rN; byId('wants').value=rW; byId('save').value=rS;
+    }
+    function updateDisplay(prefix) {
+      let np=+byId(prefix+'Needs').value, wp=+byId(prefix+'Wants').value;
+      let sp=100-np-wp;
+      byId(prefix+'Save').value=sp;
+      byId(prefix+'NeedsPct').textContent=np;
+      byId(prefix+'WantsPct').textContent=wp;
+      byId(prefix+'SavePct').textContent=sp;
+      byId(prefix+'NeedsAmt').textContent=`$${Math.round(income*np/100)}`;
+      byId(prefix+'WantsAmt').textContent=`$${Math.round(income*wp/100)}`;
+      byId(prefix+'SaveAmt').textContent=`$${Math.round(income*sp/100)}`;
+    }
+
+    modeRadios.forEach(r => r.onchange=
+      ()=> r.value==='custom'&&r.checked ? (byId('customInput').classList.remove('hidden'), byId('scenarioInput').classList.add('hidden')) : (byId('scenarioInput').classList.remove('hidden'),byId('customInput').classList.add('hidden'))
+    );
+
+    byId('startBtn').onclick = ()=>{
+      income = document.querySelector('input[name="incomeMode"]:checked').value==='custom'
+        ? Number(byId('incomeInput').value)
+        : Number(byId('scenarioSelect').value);
+      if(!income||income<=0) return alert('Enter valid income');
+      byId('screen-start').classList.add('hidden');
+      byId('screen-alloc').classList.remove('hidden');
+      byId('allocIncome').textContent=income;
+      updateDisplay('init');
+    };
+
+    ['initNeeds','initWants','initSave'].forEach(id=>byId(id).oninput=()=>updateDisplay('init'));
+    byId('allocLockBtn').onclick=()=>{
+      allocations[0]={ n:+byId('initNeeds').value, w:+byId('initWants').value, s:+byId('initSave').value };
+      currentStep=0; netDelta=0;
+      byId('screen-alloc').classList.add('hidden');
+      showStep();
+    };
+
+    function showStep(){
+      if(currentStep>=steps.length) return showSummary();
+      byId('screen-summary').classList.add('hidden');
+      byId('screen-step').classList.remove('hidden');
+      byId('budgetForm').classList.add('hidden');
+      byId('keepBtn').parentElement.classList.remove('hidden');
+      const st=steps[currentStep];
+      byId('stepTitle').textContent=st.title;
+      byId('stepDesc').textContent=st.desc;
+      let gif=byId('eventGif');gif.src=st.gif;gif.classList.remove('hidden');
+      byId('showIncome').textContent=income;
+      let prev=allocations[currentStep]||allocations[0];
+      byId('needs').value=prev.n;byId('wants').value=prev.w;byId('save').value=prev.s;
+      dynamicUpdate();
+    }
+
+    function dynamicUpdate(){
+      rebalance(window.lastChanged);
+      let n=+byId('needs').value, w=+byId('wants').value, s=+byId('save').value;
+      byId('needsPct').textContent=n;byId('wantsPct').textContent=w;byId('savePct').textContent=s;
+      byId('needsAmt').textContent=`$${Math.round(income*n/100)}`;
+      byId('wantsAmt').textContent=`$${Math.round(income*w/100)}`;
+      byId('saveAmt').textContent=`$${Math.round(income*s/100)}`;
+    }
+    ['needs','wants','save'].forEach(key=>byId(key).addEventListener('input',()=>{window.lastChanged=key;dynamicUpdate();}));
+
+    byId('keepBtn').onclick=()=>recordChoice(false);
+    byId('adjustBtn').onclick=()=>{byId('keepBtn').parentElement.classList.add('hidden');byId('budgetForm').classList.remove('hidden');startTimer(20);}    
+    byId('lockBtn').onclick=lockIt;
+    function startTimer(sec){clearInterval(timerInterval);let t=sec;byId('progress').style.transform='scaleX(1)';timerInterval=setInterval(()=>{t--;byId('progress').style.transform=`scaleX(${t/sec})`;if(t<=0){clearInterval(timerInterval);lockIt();}}},1000)}
+    function lockIt(){byId('lockSound').play();clearInterval(timerInterval);recordChoice(true);}    
+    function recordChoice(adj){allocations[currentStep]=adj?{n:+byId('needs').value,w:+byId('wants').value,s:+byId('save').value}:allocations[currentStep-1];netDelta+=steps[currentStep].delta;currentStep++;setTimeout(showStep,400);}    
+    function showSummary(){byId('screen-step').classList.add('hidden');byId('screen-summary').classList.remove('hidden');let last=allocations[allocations.length-1],baseSave=Math.round(income*(last.s/100)),finalSave=baseSave+netDelta,idealSave=Math.round(income*0.20),diff=Math.abs(finalSave-idealSave),score=Math.max(0,100-Math.round(diff/idealSave*100));byId('summaryText').innerHTML=`Your final Savings: <strong>$${finalSave}</strong><br>Ideal (20%):      <strong>$${idealSave}</strong>`;byId('finalScore').textContent=`Score: ${score}/100`;if(score>=80){byId('winSound').play();confetti.create(byId('confetti-canvas'),{resize:true})({particleCount:200});}byId('tipOverlay').style.display='block';}    
+    byId('restart').onclick=()=>{byId('tipOverlay').style.display='none';byId('screen-summary').classList.add('hidden');byId('screen-start').classList.remove('hidden');byId('incomeInput').value='';allocations=[];netDelta=0;};
+  })();
+  </script>
+</body>
+</html>

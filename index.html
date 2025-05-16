@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Budget Battle</title>
   <style>
@@ -44,6 +44,7 @@
   <audio id="winSound" src="https://actions.google.com/sounds/v1/crowds/cheer.ogg"></audio>
   <canvas id="confetti-canvas"></canvas>
 
+  <!-- Start Screen -->
   <div id="screen-start">
     <h1>🏆 Budget Battle</h1>
     <p>Welcome! In 20 minutes you’ll learn to own your budget like a boss.<br>Enter your monthly income or pick a scenario:</p>
@@ -56,6 +57,7 @@
     <button id="startBtn">Start</button>
   </div>
 
+  <!-- Initial Allocation -->
   <div id="screen-alloc" class="hidden">
     <h2>Initial Budget</h2>
     <p><strong>Income:</strong> $<span id="allocIncome"></span></p>
@@ -65,14 +67,12 @@
     <button id="allocLockBtn">Lock In Budget</button>
   </div>
 
+  <!-- Scenario Steps -->
   <div id="screen-step" class="hidden">
     <h2 id="stepTitle"></h2>
     <img id="eventGif" class="hidden" alt="Event animation">
     <p id="stepDesc"></p>
-    <div class="decision-buttons">
-      <button id="keepBtn">Keep Budget</button>
-      <button id="adjustBtn">Adjust Budget</button>
-    </div>
+    <div class="decision-buttons"><button id="keepBtn">Keep Budget</button><button id="adjustBtn">Adjust Budget</button></div>
     <div id="budgetForm" class="hidden">
       <p><strong>Income:</strong> $<span id="showIncome"></span></p>
       <div class="slider-group"><label>Needs (<span id="needsPct">50</span>%): <span id="needsAmt"></span></label><input type="range" id="needs" min="0" max="100" value="50"></div>
@@ -83,6 +83,7 @@
     </div>
   </div>
 
+  <!-- Summary -->
   <div id="screen-summary" class="hidden">
     <h2>🎉 Battle Summary</h2>
     <p id="summaryText"></p>
@@ -113,55 +114,83 @@
       });
 
       function rebalance(changed) {
-        let n=+byId('needs').value,w=+byId('wants').value,s=+byId('save').value;
-        let sum=n+w+s,f=sum?100/sum:0; n*=f;w*=f;s*=f;
-        let rN=Math.round(n),rW=Math.round(w),rS=Math.round(s),d=100-(rN+rW+rS);
-        if(changed==='needs')rN+=d;else if(changed==='wants')rW+=d;else rS+=d;
-        byId('needs').value=rN;byId('wants').value=rW;byId('save').value=rS;
+        let n = +byId('needs').value, w = +byId('wants').value, s = +byId('save').value;
+        let sum = n + w + s, factor = sum ? 100 / sum : 0;
+        n *= factor; w *= factor; s *= factor;
+        let rN = Math.round(n), rW = Math.round(w), rS = Math.round(s), diff = 100 - (rN + rW + rS);
+        if (changed === 'needs') rN += diff; else if (changed === 'wants') rW += diff; else rS += diff;
+        byId('needs').value = rN; byId('wants').value = rW; byId('save').value = rS;
       }
-      ['needs','wants','save'].forEach(k=>byId(k).addEventListener('input',e=>{rebalance(k);updateBudget();}));
+      ['needs','wants','save'].forEach(k => byId(k).addEventListener('input', e => { rebalance(k); updateBudget(); }));
 
       function updateBudget(){
-        const n=+byId('needs').value,w=+byId('wants').value,s=+byId('save').value;
-        byId('needsPct').textContent=n;byId('wantsPct').textContent=w;byId('savePct').textContent=s;
-        byId('needsAmt').textContent=`$${Math.round(income*n/100)}`;
-        byId('wantsAmt').textContent=`$${Math.round(income*w/100)}`;
-        byId('saveAmt').textContent=`$${Math.round(income*s/100)}`;
+        const n = +byId('needs').value, w = +byId('wants').value, s = +byId('save').value;
+        byId('needsPct').textContent = n; byId('wantsPct').textContent = w; byId('savePct').textContent = s;
+        byId('needsAmt').textContent = `$${Math.round(income * n/100)}`;
+        byId('wantsAmt').textContent = `$${Math.round(income * w/100)}`;
+        byId('saveAmt').textContent = `$${Math.round(income * s/100)}`;
       }
 
-      function startTimer(sec=20){clearInterval(timer);let t=sec;byId('progress').style.transform='scaleX(1)';timer=setInterval(()=>{t--;byId('progress').style.transform=`scaleX(${t/sec})`;if(t<=0){clearInterval(timer);lockStep(true);}},1000);}
+      function startTimer(sec=20){ clearInterval(timer); let t = sec; byId('progress').style.transform = 'scaleX(1)';
+        timer = setInterval(() => { t--; byId('progress').style.transform = `scaleX(${t/sec})`; if (t<=0) { clearInterval(timer); lockStep(true); } }, 1000);
+      }
 
-      function lockStep(adj){byId('lockSound').play();clearInterval(timer);
-        const alloc=adj?{n:+byId('needs').value,w:+byId('wants').value,s:+byId('save').value}:allocations[currentStep-1];
-        allocations[currentStep]=alloc;netDelta+=steps[currentStep].delta;currentStep++;showNext();}
+      function lockStep(adjusted){ byId('lockSound').play(); clearInterval(timer);
+        allocations[currentStep] = adjusted ? { n:+byId('needs').value, w:+byId('wants').value, s:+byId('save').value } : allocations[currentStep-1];
+        netDelta += steps[currentStep].delta; currentStep++; showNext(); }
 
-      function showNext(){if(currentStep>=steps.length)return showSummary();
-        const st=steps[currentStep];byId('stepTitle').textContent=st.title;byId('stepDesc').textContent=st.desc;
-        byId('eventGif').src=st.gif;byId('eventGif').classList.remove('hidden');
-        byId('budgetForm').classList.add('hidden');byId('keepBtn').parentElement.classList.remove('hidden');
-        byId('showIncome').textContent=income;
-        const prev=allocations[currentStep]||allocations[0];
-        byId('needs').value=prev.n;byId('wants').value=prev.w;byId('save').value=prev.s;updateBudget();}
+      function showNext(){
+        if (currentStep >= steps.length) return showSummary();
+        byId('screen-alloc').classList.add('hidden');
+        byId('screen-start').classList.add('hidden');
+        byId('screen-step').classList.remove('hidden');
+        byId('screen-summary').classList.add('hidden');
+        byId('budgetForm').classList.add('hidden');
+        byId('keepBtn').parentElement.classList.remove('hidden');
+        const st = steps[currentStep];
+        byId('stepTitle').textContent = st.title;
+        byId('stepDesc').textContent = st.desc;
+        byId('eventGif').src = st.gif; byId('eventGif').classList.remove('hidden');
+        byId('showIncome').textContent = income;
+        const prev = allocations[currentStep] || allocations[0];
+        byId('needs').value = prev.n; byId('wants').value = prev.w; byId('save').value = prev.s;
+        updateBudget();
+      }
 
-      function showSummary(){byId('screen-step').classList.add('hidden');byId('screen-summary').classList.remove('hidden');
-        const last=allocations[allocations.length-1];
-        const finalSave=Math.round(income*last.s/100)+netDelta;
-        const ideal=Math.round(income*0.2);
-        const score=Math.max(0,100-Math.round(Math.abs(finalSave-ideal)/ideal*100));
-        byId('summaryText').innerHTML=`Final Savings: <strong>$${finalSave}</strong><br>Ideal (20%): <strong>$${ideal}</strong>`;
-        byId('finalScore').textContent=`Score: ${score}/100`;
-        if(score>=80){byId('winSound').play();confetti.create(byId('confetti-canvas'),{resize:true})({particleCount:200});}}
+      function showSummary(){
+        byId('screen-step').classList.add('hidden');
+        byId('screen-summary').classList.remove('hidden');
+        const last = allocations[allocations.length-1];
+        const finalSave = Math.round(income * last.s/100) + netDelta;
+        const ideal = Math.round(income * 0.2);
+        const score = Math.max(0, 100 - Math.round(Math.abs(finalSave - ideal)/ideal*100));
+        byId('summaryText').innerHTML = `Final Savings: <strong>$${finalSave}</strong><br>Ideal (20%): <strong>$${ideal}</strong>`;
+        byId('finalScore').textContent = `Score: ${score}/100`;
+        if (score >= 80) { byId('winSound').play(); confetti.create(byId('confetti-canvas'),{resize:true})({particleCount:200}); }
+      }
 
-      byId('startBtn').onclick=()=>{income=document.querySelector('input[name="incomeMode"]:checked').value==='custom'?+byId('incomeInput').value:+byId('scenarioSelect').value;
-        if(!income)return alert('Enter valid income');byId('screen-start').classList.add('hidden');byId('screen-alloc').classList.remove('hidden');
-        byId('allocIncome').textContent=income;updateBudget();allocations[0]={n:+byId('initNeeds').value,w:+byId('initWants').value,s:+byId('initSave').value};currentStep=1;netDelta=0;};
+      byId('startBtn').onclick = () => {
+        income = document.querySelector('input[name="incomeMode"]:checked').value === 'custom' ? +byId('incomeInput').value : +byId('scenarioSelect').value;
+        if (!income) return alert('Enter valid income');
+        byId('screen-start').classList.add('hidden');
+        byId('screen-alloc').classList.remove('hidden');
+        byId('allocIncome').textContent = income;
+        updateBudget();
+        allocations[0] = { n:+byId('initNeeds').value, w:+byId('initWants').value, s:+byId('initSave').value };
+        currentStep = 1; netDelta = 0;
+      };
 
-      ['initNeeds','initWants','initSave'].forEach(id=>byId(id).addEventListener('input',()=>{const n=+byId('initNeeds').value,w=+byId('initWants').value;byId('initSave').value=Math.max(0,100-n-w);updateBudget();}));
-      byId('allocLockBtn').onclick=()=>{byId('screen-alloc').classList.add('hidden');showNext();};
-      byId('keepBtn').onclick=()=>lockStep(false);
-      byId('adjustBtn').onclick=()=>{byId('keepBtn').parentElement.classList.add('hidden');byId('budgetForm').classList.remove('hidden');startTimer();};
-      byId('lockBtn').onclick=()=>lockStep(true);
-      byId('restart').onclick=()=>location.reload();
+      ['initNeeds','initWants','initSave'].forEach(id => byId(id).addEventListener('input', () => {
+        const n = +byId('initNeeds').value, w = +byId('initWants').value;
+        byId('initSave').value = Math.max(0, 100 - n - w);
+        updateBudget();
+      }));
+
+      byId('allocLockBtn').onclick = () => { byId('screen-alloc').classList.add('hidden'); showNext(); };
+      byId('keepBtn').onclick = () => lockStep(false);
+      byId('adjustBtn').onclick = () => { byId('keepBtn').parentElement.classList.add('hidden'); byId('budgetForm').classList.remove('hidden'); startTimer(); };
+      byId('lockBtn').onclick = () => lockStep(true);
+      byId('restart').onclick = () => location.reload();
     })();
   </script>
 </body>

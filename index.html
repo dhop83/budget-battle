@@ -5,19 +5,34 @@
   <title>Budget Battle</title>
   <style>
     body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-    h1 { text-align: center; }
+    h1, h2 { text-align: center; }
     .hidden { display: none; }
     .slider-group { margin: 1rem 0; }
     label { display: block; margin-bottom: 0.3rem; }
     input[type=range] { width: 100%; }
-    button { padding: 0.6rem 1.2rem; font-size: 1rem; }
-    #result { margin-top: 1.5rem; font-weight: bold; }
+    button { padding: 0.6rem 1.2rem; font-size: 1rem; margin-top: 1rem; }
+    #timer { font-size: 1.2rem; text-align: center; margin-bottom: 1rem; }
+    #summaryScreen p { margin: .5rem 0; }
   </style>
 </head>
 <body>
-  <h1>🏆 Budget Battle</h1>
-  <div id="step1">
-    <label for="scenario">Choose your scenario:</label>
+
+  <!-- 1. WELCOME SCREEN -->
+  <div id="welcomeScreen">
+    <h1>🏆 Budget Battle</h1>
+    <p>Welcome! In 20 minutes you’ll learn to own your budget like a boss. You’ll:</p>
+    <ul>
+      <li>Pick a scenario</li>
+      <li>Allocate with the 50/30/20 rule</li>
+      <li>Handle a surprise “life event”</li>
+      <li>See how you score vs. the ideal</li>
+    </ul>
+    <button id="begin">Let’s Go!</button>
+  </div>
+
+  <!-- 2. SCENARIO SELECTION -->
+  <div id="step1" class="hidden">
+    <h2>Choose Your Scenario</h2>
     <select id="scenario">
       <option value="3000,1000,300">Alex: $3,000/mo, rent $1,000, loans $300</option>
       <option value="4500,1800,500">Taylor: $4,500/mo, rent $1,800, savings goal $500</option>
@@ -26,8 +41,11 @@
     <button id="start">Start Budget</button>
   </div>
 
+  <!-- 3. SLIDER ALLOCATION -->
   <div id="step2" class="hidden">
-    <p><strong>Your Income: </strong><span id="income"></span></p>
+    <h2>Allocate Your 50/30/20</h2>
+    <div id="timer">⏱️ Time left: <span id="count">60</span>s</div>
+    <p><strong>Income:</strong> <span id="income"></span></p>
     <div class="slider-group">
       <label>Needs (<span id="needsPct">50</span>%): <span id="needsAmt"></span></label>
       <input type="range" id="needs" min="30" max="70" value="50">
@@ -38,29 +56,47 @@
     </div>
     <div class="slider-group">
       <label>Savings/Debt (<span id="savePct">20</span>%): <span id="saveAmt"></span></label>
-      <input type="range" id="save" min="10" max="40" value="20">
+      <input type="range" id="save" min="10" max="40" value="20" disabled>
     </div>
-    <button id="submitBudget">Submit Budget</button>
+    <button id="submitBudget">Lock In!</button>
   </div>
 
-  <div id="result" class="hidden"></div>
+  <!-- 4. SUMMARY SCREEN -->
+  <div id="summaryScreen" class="hidden">
+    <h2>Battle Summary</h2>
+    <p id="eventText"></p>
+    <p>Your original Savings bucket: <strong id="origSave"></strong></p>
+    <p>After the event: <strong id="newSave"></strong></p>
+    <p id="scoreText"></p>
+    <button id="playAgain">Play Again</button>
+  </div>
 
   <script>
-    const step1 = document.getElementById('step1');
-    const step2 = document.getElementById('step2');
-    const result = document.getElementById('result');
     let income, rent, fixed;
+    let origSavings;
+    let countdown;
+
+    const welcome = document.getElementById('welcomeScreen');
+    const step1   = document.getElementById('step1');
+    const step2   = document.getElementById('step2');
+    const summary = document.getElementById('summaryScreen');
+
+    document.getElementById('begin').onclick = () => {
+      welcome.classList.add('hidden');
+      step1.classList.remove('hidden');
+    };
 
     document.getElementById('start').onclick = () => {
       [income, rent, fixed] = document.getElementById('scenario').value.split(',').map(Number);
       document.getElementById('income').textContent = `$${income}`;
+      origSavings = Math.round(income * 0.20);
       updateAmounts();
       step1.classList.add('hidden');
       step2.classList.remove('hidden');
-      result.classList.add('hidden');
+      startTimer(60);
     };
 
-    ['needs','wants','save'].forEach(id => {
+    ['needs','wants'].forEach(id => {
       document.getElementById(id).oninput = updateAmounts;
     });
 
@@ -68,7 +104,7 @@
       const needsPct = +document.getElementById('needs').value;
       const wantsPct = +document.getElementById('wants').value;
       const savePct  = 100 - needsPct - wantsPct;
-      document.getElementById('save').value = savePct;
+      document.getElementById('save').value   = savePct;
       document.getElementById('needsPct').textContent = needsPct;
       document.getElementById('wantsPct').textContent = wantsPct;
       document.getElementById('savePct').textContent  = savePct;
@@ -77,17 +113,49 @@
       document.getElementById('saveAmt').textContent = `$${Math.round(income * savePct/100)}`;
     }
 
+    function startTimer(seconds) {
+      const countEl = document.getElementById('count');
+      let s = seconds;
+      countEl.textContent = s;
+      countdown = setInterval(() => {
+        s--;
+        countEl.textContent = s;
+        if (s === 0) {
+          clearInterval(countdown);
+          document.getElementById('submitBudget').click();
+        }
+      }, 1000);
+    }
+
     document.getElementById('submitBudget').onclick = () => {
+      clearInterval(countdown);
       const events = [
-        { text: '🏎 Unexpected car repair: -$400 from Needs', delta: -400 },
-        { text: '🎉 Work bonus! +$300 to Savings', delta: +300 },
-        { text: '📱 Phone upgrade: -$200 from Wants', delta: -200 },
+        { text: '🏎 Unexpected car repair: –$400', delta: -400 },
+        { text: '🎉 Work bonus! +$300', delta: +300 },
+        { text: '📱 Phone upgrade: –$200', delta: -200 },
       ];
       const e = events[Math.floor(Math.random()*events.length)];
-      let newSave = Math.round(income * (+document.getElementById('savePct').textContent)/100) + e.delta;
-      result.innerHTML = `<p>${e.text}</p>
-        <p>Your adjusted Savings bucket: <strong>$${newSave}</strong></p>`;
-      result.classList.remove('hidden');
+      const currentSave = Math.round(income * (+document.getElementById('savePct').textContent)/100);
+      const adjustedSave = currentSave + e.delta;
+
+      document.getElementById('eventText').textContent = e.text;
+      document.getElementById('origSave').textContent = `$${currentSave}`;
+      document.getElementById('newSave').textContent  = `$${adjustedSave}`;
+
+      // simple score: 
+      const ideal = origSavings;
+      const diff  = Math.abs(adjustedSave - ideal);
+      const score = Math.max(0, 100 - Math.round(diff / ideal * 100));
+      document.getElementById('scoreText').textContent = 
+        `Your score: ${score}/100 (closer to 100 is better)`;
+
+      step2.classList.add('hidden');
+      summary.classList.remove('hidden');
+    };
+
+    document.getElementById('playAgain').onclick = () => {
+      summary.classList.add('hidden');
+      welcome.classList.remove('hidden');
     };
   </script>
 </body>

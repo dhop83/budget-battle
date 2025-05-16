@@ -2,73 +2,125 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Budget Battle</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-    h1, h2 { text-align: center; }
-    .hidden { display: none; }
+    /* Base & Layout */
+    html, body { margin: 0; padding: 0; height: 100%; width: 100%; }
+    body { 
+      font-family: sans-serif; 
+      box-sizing: border-box; 
+      padding: 1rem; 
+      max-width: 480px; 
+      margin: 0 auto; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: flex-start;
+    }
+    h1, h2 { margin: 0.5rem 0; text-align: center; font-size: 1.5rem; }
+    p { font-size: 1rem; line-height: 1.4; }
+    button { 
+      width: 100%; 
+      padding: 1rem; 
+      font-size: 1.1rem; 
+      margin: 0.5rem 0; 
+      border: none; 
+      border-radius: 8px; 
+      background: #76c7c0; 
+      color: #fff; 
+      touch-action: manipulation;
+    }
+    button:active { background: #5aa8a0; }
+    input[type=number] {
+      width: 100%; 
+      padding: 0.8rem; 
+      font-size: 1.1rem; 
+      margin-bottom: 0.5rem; 
+      border-radius: 6px; 
+      border: 1px solid #ccc;
+    }
+
+    /* Responsive Sliders */
     .slider-group { margin: 1rem 0; }
-    label { display: block; margin-bottom: 0.3rem; }
-    input[type=range] { width: 100%; }
-    button { padding: 0.6rem 1.2rem; font-size: 1rem; margin-top: 1rem; }
-    #timerBar { width: 100%; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin: .5rem 0; }
-    #progress { height: 100%; width: 100%; background: #76c7c0; transform-origin: left; }
-    #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+    .slider-group label { font-size: 1rem; margin-bottom: 0.3rem; }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%; 
+      height: 2.5rem; 
+      background: transparent;
+      margin: 0;
+      touch-action: pan-x;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 2rem; height: 2rem; 
+      border-radius: 50%; 
+      background: #76c7c0; 
+      border: none;
+      margin-top: -0.75rem;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 0.5rem; 
+      background: #ddd; 
+      border-radius: 0.25rem;
+    }
+
+    /* Screens */
+    .hidden { display: none; }
+    #timerBar { width: 100%; height: 0.75rem; background: #eee; border-radius: 0.4rem; overflow: hidden; margin: 0.5rem 0; }
+    #progress { height: 100%; width: 100%; background: #76c7c0; transform-origin: left; transition: transform 1s linear; }
+    .decision-buttons { display: flex; flex-direction: column; gap: 0.5rem; }
+    /* Tip & Confetti */
     #tipOverlay { 
       position: fixed; bottom:20px; left:50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.8); color:#fff; padding:1rem 1.5rem;
-      border-radius:8px; font-size:1rem; display:none;
+      background: rgba(0,0,0,0.8); color:#fff; padding:0.8rem 1rem;
+      border-radius:8px; font-size:1rem; display:none; max-width: 90%;
     }
-    .decision-buttons button { width: 48%; margin-right: 2%; }
-    .decision-buttons button:last-child { margin-right: 0; }
+    #confetti-canvas { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index: 100; }
   </style>
 </head>
 <body>
 
-  <!-- AUDIO -->
+  <!-- Audio -->
   <audio id="lockSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-  <audio id="winSound"  src="https://actions.google.com/sounds/v1/crowds/applause.ogg"></audio>
+  <audio id="winSound"  src="https://actions.google.com/sounds/v1/crowds/cheer.ogg"></audio>
 
-  <!-- CONFETTI CANVAS -->
+  <!-- Confetti Canvas -->
   <canvas id="confetti-canvas"></canvas>
 
-  <!-- TIP OVERLAY -->
+  <!-- Tip Overlay -->
   <div id="tipOverlay">💡 Tip: Automate your savings transfer to pay yourself first!</div>
 
-  <!-- 1. START SCREEN -->
+  <!-- 1. Start Screen -->
   <div id="screen-start">
     <h1>🏆 Budget Battle</h1>
     <p>Welcome! In 20 minutes you’ll learn to own your budget like a boss.<br>
        Enter your monthly income or pick a scenario:</p>
-
-    <div>
-      <label>
+    <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+      <label style="flex:1; font-size:1rem;">
         <input type="radio" name="incomeMode" value="custom" checked> My Income
       </label>
-      <label>
+      <label style="flex:1; font-size:1rem;">
         <input type="radio" name="incomeMode" value="scenario"> Scenario
       </label>
     </div>
-
     <div id="customInput">
       <input type="number" id="incomeInput" placeholder="e.g. 3500" />
     </div>
     <div id="scenarioInput" class="hidden">
-      <select id="scenarioSelect">
+      <select id="scenarioSelect" style="width:100%; padding:0.8rem; font-size:1.1rem;">
         <option value="3000">Alex: $3,000</option>
         <option value="4500">Taylor: $4,500</option>
         <option value="2500">Jordan: $2,500</option>
       </select>
     </div>
-
     <button id="startBtn">Start</button>
   </div>
 
-  <!-- 2. INITIAL ALLOCATION -->
+  <!-- 2. Initial Allocation -->
   <div id="screen-alloc" class="hidden">
     <h2>Initial Budget</h2>
     <p><strong>Income:</strong> $<span id="allocIncome"></span></p>
-
     <div class="slider-group">
       <label>Needs (<span id="initNeedsPct">50</span>%): <span id="initNeedsAmt"></span></label>
       <input type="range" id="initNeeds" min="30" max="70" value="50">
@@ -81,20 +133,17 @@
       <label>Savings (<span id="initSavePct">20</span>%): <span id="initSaveAmt"></span></label>
       <input type="range" id="initSave" min="10" max="60" value="20">
     </div>
-
     <button id="allocLockBtn">Lock In Budget</button>
   </div>
 
-  <!-- 3. SCENARIO STEPS -->
+  <!-- 3. Scenario Steps -->
   <div id="screen-step" class="hidden">
     <h2 id="stepTitle"></h2>
     <p id="stepDesc"></p>
-
     <div class="decision-buttons">
       <button id="keepBtn">Keep Budget</button>
       <button id="adjustBtn">Adjust Budget</button>
     </div>
-
     <div id="budgetForm" class="hidden">
       <p><strong>Income:</strong> $<span id="showIncome"></span></p>
       <div class="slider-group">
@@ -114,7 +163,7 @@
     </div>
   </div>
 
-  <!-- 4. SUMMARY -->
+  <!-- 4. Summary -->
   <div id="screen-summary" class="hidden">
     <h2>🎉 Battle Summary</h2>
     <p id="summaryText"></p>
@@ -122,18 +171,18 @@
     <button id="restart">Play Again</button>
   </div>
 
-  <!-- CONFETTI LIBRARY -->
+  <!-- Confetti Library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
   <script>
-    // ===== Data & State =====
+    // Data & state
     const steps = [
       { title: "Car Trouble",     desc: "Your car needs a $300 repair.",        delta: -300 },
       { title: "Side Gig Bonus",   desc: "You earn $400 freelancing.",          delta: +400 },
       { title: "Phone Upgrade",    desc: "A new phone costs $250.",             delta: -250 },
     ];
-    let income, currentStep = 0, allocations = [], netDelta = 0, timerInterval;
+    let income, currentStep=0, allocations=[], netDelta=0, timerInterval;
 
-    // ===== Elements =====
+    // Elements
     const screenStart   = document.getElementById('screen-start');
     const screenAlloc   = document.getElementById('screen-alloc');
     const screenStep    = document.getElementById('screen-step');
@@ -179,41 +228,39 @@
     const winSound      = document.getElementById('winSound');
     const tipOverlay    = document.getElementById('tipOverlay');
 
-    // ===== Helpers =====
+    // Helpers
     function updateInitSliders() {
-      const n = +initNeeds.value, w=+initWants.value, s=100-n-w;
-      initSave.value = s;
-      initNeedsPct.textContent = n; initWantsPct.textContent = w; initSavePct.textContent = s;
-      initNeedsAmt.textContent = `$${Math.round(income*n/100)}`;
-      initWantsAmt.textContent= `$${Math.round(income*w/100)}`;
-      initSaveAmt.textContent = `$${Math.round(income*s/100)}`;
+      const n=+initNeeds.value, w=+initWants.value, s=100-n-w;
+      initSave.value=s;
+      initNeedsPct.textContent=n; initWantsPct.textContent=w; initSavePct.textContent=s;
+      initNeedsAmt.textContent=`$${Math.round(income*n/100)}`;
+      initWantsAmt.textContent=`$${Math.round(income*w/100)}`;
+      initSaveAmt.textContent=`$${Math.round(income*s/100)}`;
     }
     [initNeeds,initWants,initSave].forEach(el=>el.addEventListener('input', updateInitSliders));
 
     function updateSliders(){
-      const n = +needs.value, w=+wants.value, s=100-n-w;
-      save.value = s;
-      needsPct.textContent = n; wantsPct.textContent = w; savePct.textContent = s;
-      needsAmt.textContent = `$${Math.round(income*n/100)}`;
-      wantsAmt.textContent= `$${Math.round(income*w/100)}`;
-      saveAmt.textContent = `$${Math.round(income*s/100)}`;
+      const n=+needs.value, w=+wants.value, s=100-n-w;
+      save.value=s;
+      needsPct.textContent=n; wantsPct.textContent=w; savePct.textContent=s;
+      needsAmt.textContent=`$${Math.round(income*n/100)}`;
+      wantsAmt.textContent=`$${Math.round(income*w/100)}`;
+      saveAmt.textContent=`$${Math.round(income*s/100)}`;
     }
     [needs,wants,save].forEach(el=>el.addEventListener('input', updateSliders));
 
     function startTimer(sec=20){
       clearInterval(timerInterval);
-      let t = sec;
-      progressBar.style.transform = 'scaleX(1)';
-      timerInterval = setInterval(()=>{
+      let t=sec;
+      progressBar.style.transform='scaleX(1)';
+      timerInterval=setInterval(()=>{
         t--;
-        const pct = t / sec;
-        progressBar.style.transform = `scaleX(${pct})`;
+        progressBar.style.transform=`scaleX(${t/sec})`;
         if(t<=0){ clearInterval(timerInterval); lockAllocation(); }
       },1000);
     }
 
-    // ===== Screen Logic =====
-    // Toggle inputs
+    // Screen Logic
     modeRadios.forEach(radio=>{
       radio.addEventListener('change',()=>{
         if(radio.value==='custom' && radio.checked){
@@ -226,65 +273,46 @@
       });
     });
 
-    // Start
     startBtn.onclick = ()=>{
-      if(document.querySelector('input[name="incomeMode"]:checked').value==='custom'){
-        income = Number(incomeInput.value);
-      } else {
-        income = Number(scenarioSelect.value);
-      }
-      if(!income || income<=0) return alert('Enter a valid income.');
+      income = document.querySelector('input[name="incomeMode"]:checked').value==='custom'
+        ? Number(incomeInput.value)
+        : Number(scenarioSelect.value);
+      if(!income||income<=0) return alert('Enter a valid income.');
       screenStart.classList.add('hidden');
       screenAlloc.classList.remove('hidden');
-      allocIncome.textContent = income;
+      allocIncome.textContent=income;
       updateInitSliders();
     };
 
-    // Initial Lock
     allocLockBtn.onclick = ()=>{
-      allocations[0] = {
-        n: +initNeeds.value,
-        w: +initWants.value,
-        s: +initSave.value
-      };
-      currentStep = 0;
-      netDelta = 0;
+      allocations[0]={ n:+initNeeds.value, w:+initWants.value, s:+initSave.value };
+      currentStep=0; netDelta=0;
       screenAlloc.classList.add('hidden');
       showStep();
     };
 
-    // Show Scenario Step
     function showStep(){
       if(currentStep>=steps.length) return showSummary();
       screenSummary.classList.add('hidden');
       screenStep.classList.remove('hidden');
       budgetForm.classList.add('hidden');
       keepBtn.parentElement.classList.remove('hidden');
-
-      const { title, desc } = steps[currentStep];
-      stepTitle.textContent = title;
-      stepDesc.textContent  = desc;
-      showIncome.textContent = income;
-
-      // prefill sliders from last allocation
-      const prev = allocations[currentStep] || allocations[0];
-      needs.value = prev.n; wants.value = prev.w; save.value = prev.s;
+      const {title,desc}=steps[currentStep];
+      stepTitle.textContent=title;
+      stepDesc.textContent=desc;
+      showIncome.textContent=income;
+      const prev=allocations[currentStep]||allocations[0];
+      needs.value=prev.n; wants.value=prev.w; save.value=prev.s;
       updateSliders();
     }
 
-    // Keep Budget
-    keepBtn.onclick = ()=>{
-      recordChoice(false);
-    };
-
-    // Adjust Budget
+    keepBtn.onclick = ()=> recordChoice(false);
     adjustBtn.onclick = ()=>{
       keepBtn.parentElement.classList.add('hidden');
       budgetForm.classList.remove('hidden');
       startTimer(20);
     };
 
-    // Lock Allocation after adjust
     function lockAllocation(){
       lockSound.play();
       clearInterval(timerInterval);
@@ -293,55 +321,41 @@
     lockBtn.onclick = lockAllocation;
 
     function recordChoice(didAdjust){
-      // record allocation
-      if(didAdjust){
-        allocations[currentStep] = {
-          n: +needs.value,
-          w: +wants.value,
-          s: +save.value
-        };
-      } else {
-        allocations[currentStep] = allocations[currentStep-1];
-      }
-      // apply event delta to netDelta (savings)
+      allocations[currentStep] = didAdjust 
+        ? { n:+needs.value, w:+wants.value, s:+save.value }
+        : allocations[currentStep-1];
       netDelta += steps[currentStep].delta;
       currentStep++;
       setTimeout(showStep, 500);
     }
 
-    // Summary
     function showSummary(){
       screenStep.classList.add('hidden');
       screenSummary.classList.remove('hidden');
-
-      const last = allocations[allocations.length-1];
-      const baseSave = Math.round(income * (last.s/100));
-      const finalSave = baseSave + netDelta;
-      const idealSave = Math.round(income * 0.20);
-      const diff = Math.abs(finalSave - idealSave);
-      const score = Math.max(0, 100 - Math.round(diff/idealSave*100));
-
-      summaryText.innerHTML = `
+      const last=allocations[allocations.length-1];
+      const baseSave=Math.round(income*(last.s/100));
+      const finalSave=baseSave+netDelta;
+      const idealSave=Math.round(income*0.20);
+      const diff=Math.abs(finalSave-idealSave);
+      const score=Math.max(0,100-Math.round(diff/idealSave*100));
+      summaryText.innerHTML=`
         Your final Savings: <strong>$${finalSave}</strong><br>
         Ideal (20%): <strong>$${idealSave}</strong>
       `;
-      finalScore.textContent = `Score: ${score}/100`;
-
-      if(score >= 80){
+      finalScore.textContent=`Score: ${score}/100`;
+      if(score>=80){
         winSound.play();
-        confetti.create(document.getElementById('confetti-canvas'), { resize: true })({ particleCount: 200 });
+        confetti.create(document.getElementById('confetti-canvas'),{resize:true})({particleCount:200});
       }
-      tipOverlay.style.display = 'block';
+      tipOverlay.style.display='block';
     }
 
-    // Restart
     restart.onclick = ()=>{
-      tipOverlay.style.display = 'none';
+      tipOverlay.style.display='none';
       screenSummary.classList.add('hidden');
       screenStart.classList.remove('hidden');
-      incomeInput.value = '';
-      allocations = [];
-      netDelta = 0;
+      incomeInput.value='';
+      allocations=[]; netDelta=0;
     };
   </script>
 </body>

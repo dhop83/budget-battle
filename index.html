@@ -5,22 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Budget Battle</title>
   <style>
-    body { font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; display: flex; flex-direction: column; }
-    h1, h2 { text-align: center; }
+    /* Responsive layout */
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    h1, h2 { text-align: center; margin: 0.5rem 0; }
     .hidden { display: none; }
     .slider-group { margin: 1rem 0; }
     .slider-group label { display: block; margin-bottom: 0.3rem; }
     input[type=range] { -webkit-appearance: none; width: 100%; height: 2.5rem; background: transparent; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 2rem; height: 2rem; border-radius: 50%; background: #76c7c0; margin-top: -0.75rem; }
     input[type=range]::-webkit-slider-runnable-track { height: 0.5rem; background: #ddd; border-radius: 0.25rem; }
-    button { width: 100%; padding: 1rem; margin: 0.5rem 0; font-size: 1rem; border: none; border-radius: 8px; background: #76c7c0; color: white; }
+    button {
+      width: 100%; padding: 1rem; margin: 0.5rem 0;
+      font-size: 1rem; border: none; border-radius: 8px;
+      background: #76c7c0; color: white;
+      cursor: pointer;
+    }
     button:active { background: #5aa8a0; }
     #timerBar { width: 100%; height: 0.75rem; background: #eee; border-radius: 0.4rem; overflow: hidden; margin: 0.5rem 0; }
     #progress { height: 100%; background: #76c7c0; transform-origin: left; transition: transform 1s linear; }
     .decision-buttons { display: flex; flex-direction: column; gap: 0.5rem; }
-    #eventGif { max-width: 100%; margin: 1rem auto; display: block; }
+    #eventGif { max-width: 100%; height: auto; margin: 1rem auto; display: block; }
     #tipBox { background: #f0f8ff; padding: 0.5rem; border-left: 4px solid #007acc; margin: 0.5rem 0; font-size: 0.9rem; }
     footer { text-align: center; margin-top: auto; font-size: 0.8rem; color: #666; }
+    /* Ensure input and select scale */
+    input, select { width: 100%; font-size: 1rem; padding: 0.5rem; box-sizing: border-box; }
+    /* Media query for larger screens */
+    @media (min-width: 600px) {
+      body { max-width: 600px; margin: 0 auto; }
+    }
   </style>
 </head>
 <body>
@@ -31,36 +51,21 @@
   <div id="screen-start">
     <h1>🏆 Budget Battle</h1>
     <p>Welcome! In 20 minutes you’ll learn to own your budget like a boss.<br>Enter your monthly income or pick a scenario:</p>
-    <div style="display:flex; gap:0.5rem;">
-      <label style="flex:1;"><input type="radio" name="incomeMode" value="custom" checked> My Income</label>
-      <label style="flex:1;"><input type="radio" name="incomeMode" value="scenario"> Scenario</label>
+    <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+      <label style="flex:1; min-width:120px;"><input type="radio" name="incomeMode" value="custom" checked> My Income</label>
+      <label style="flex:1; min-width:120px;"><input type="radio" name="incomeMode" value="scenario"> Scenario</label>
     </div>
-    <div id="customInput"><input type="number" id="incomeInput" placeholder="e.g. 3500"></div>
-    <div id="scenarioInput" class="hidden">
-      <select id="scenarioSelect">
-        <option value="3000">Alex: $3,000</option>
-        <option value="4500">Taylor: $4,500</option>
-        <option value="2500">Jordan: $2,500</option>
-      </select>
-    </div>
+    <div id="customInput" style="margin-top:0.5rem;"><input type="number" id="incomeInput" placeholder="e.g. 3500"></div>
+    <div id="scenarioInput" class="hidden" style="margin-top:0.5rem;"><select id="scenarioSelect"><option value="3000">Alex: $3,000</option><option value="4500">Taylor: $4,500</option><option value="2500">Jordan: $2,500</option></select></div>
     <button id="startBtn">Start</button>
   </div>
 
   <div id="screen-alloc" class="hidden">
     <h2>Initial Budget</h2>
     <p><strong>Income:</strong> $<span id="allocIncome"></span></p>
-    <div class="slider-group">
-      <label>Needs (<span id="initNeedsPct">50</span>%): <span id="initNeedsAmt"></span></label>
-      <input type="range" id="initNeeds" min="0" max="100" value="50">
-    </div>
-    <div class="slider-group">
-      <label>Wants (<span id="initWantsPct">30</span>%): <span id="initWantsAmt"></span></label>
-      <input type="range" id="initWants" min="0" max="100" value="30">
-    </div>
-    <div class="slider-group">
-      <label>Savings (<span id="initSavePct">20</span>%): <span id="initSaveAmt"></span></label>
-      <input type="range" id="initSave" min="0" max="100" value="20">
-    </div>
+    <div class="slider-group"><label>Needs (<span id="initNeedsPct">50</span>%): <span id="initNeedsAmt"></span></label><input type="range" id="initNeeds" min="0" max="100" value="50"></div>
+    <div class="slider-group"><label>Wants (<span id="initWantsPct">30</span>%): <span id="initWantsAmt"></span></label><input type="range" id="initWants" min="0" max="100" value="30"></div>
+    <div class="slider-group"><label>Savings (<span id="initSavePct">20</span>%): <span id="initSaveAmt"></span></label><input type="range" id="initSave" min="0" max="100" value="20"></div>
     <button id="allocLockBtn">Lock In Budget</button>
   </div>
 
@@ -68,28 +73,16 @@
     <h2 id="stepTitle"></h2>
     <img id="eventGif" class="hidden" alt="Event animation">
     <p id="stepDesc"></p>
-    <div class="decision-buttons">
-      <button id="keepBtn">Keep Budget</button>
-      <button id="adjustBtn">Adjust Budget</button>
-    </div>
+    <div class="decision-buttons"><button id="keepBtn">Keep Budget</button><button id="adjustBtn">Adjust Budget</button></div>
     <div id="tipSection" class="hidden">
       <button id="showTipBtn" style="background:#004f80;">Show Tip</button>
       <div id="tipBox" class="hidden"></div>
     </div>
     <div id="budgetForm" class="hidden">
       <p><strong>Income:</strong> $<span id="showIncome"></span></p>
-      <div class="slider-group">
-        <label>Needs (<span id="needsPct">50</span>%): <span id="needsAmt"></span></label>
-        <input type="range" id="needs" min="0" max="100" value="50">
-      </div>
-      <div class="slider-group">
-        <label>Wants (<span id="wantsPct">30</span>%): <span id="wantsAmt"></span></label>
-        <input type="range" id="wants" min="0" max="100" value="30">
-      </div>
-      <div class="slider-group">
-        <label>Savings (<span id="savePct">20</span>%): <span id="saveAmt"></span></label>
-        <input type="range" id="save" min="0" max="100" value="20">
-      </div>
+      <div class="slider-group"><label>Needs (<span id="needsPct">50</span>%): <span id="needsAmt"></span></label><input type="range" id="needs" min="0" max="100" value="50"></div>
+      <div class="slider-group"><label>Wants (<span id="wantsPct">30</span>%): <span id="wantsAmt"></span></label><input type="range" id="wants" min="0" max="100" value="30"></div>
+      <div class="slider-group"><label>Savings (<span id="savePct">20</span>%): <span id="saveAmt"></span></label><input type="range" id="save" min="0" max="100" value="20"></div>
       <div id="timerBar"><div id="progress"></div></div>
       <button id="lockBtn">Lock Allocation</button>
     </div>
@@ -98,7 +91,7 @@
   <div id="screen-summary" class="hidden">
     <h2>🎉 Battle Summary</h2>
     <p id="summaryText"></p>
-    <p id="finalScore"></p>
+    <p style="font-size:1.2rem; font-weight:bold;" id="finalScore"></p>
     <button id="restart">Play Again</button>
   </div>
 
@@ -110,44 +103,57 @@
       const steps = [
         { title: "1. Car Trouble", desc: "🚗 Your car needs a $300 repair.", delta: -300,
           gif: "https://media.giphy.com/media/LwIyvaNcnzsD6/giphy.gif",
-          tip: "Tip: Consider setting aside a small auto repair fund each month to avoid pressure on savings." },
+          tip: "Consider setting aside a small auto repair fund each month to avoid pressure on savings." },
         { title: "2. Side Gig Bonus", desc: "💼 You earn $400 freelancing.", delta: +400,
           gif: "https://media.giphy.com/media/UBSg1iy5f8p0g/giphy.gif",
-          tip: "Tip: Treat bonuses as extra savings or debt paydown instead of extra spending." },
+          tip: "Treat bonuses as extra savings or debt paydown instead of extra spending." },
         { title: "3. Phone Upgrade", desc: "📱 A new phone costs $250.", delta: -250,
           gif: "https://media.giphy.com/media/3og0IPxMM0erATueVW/giphy.gif",
-          tip: "Tip: Look into financing plans or resale of old devices to reduce net cost." },
+          tip: "Look into financing plans or resale of old devices to reduce net cost." },
         { title: "4. Streaming Hike", desc: "📺 Streaming price goes up $15.", delta: -15,
           gif: "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif",
-          tip: "Tip: Periodically review subscriptions and cancel unused ones to save money." },
+          tip: "Periodically review subscriptions and cancel unused ones to save money." },
         { title: "5. Birthday Gift", desc: "🎁 You receive a $100 gift.", delta: +100,
           gif: "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
-          tip: "Tip: Funnel gifts or windfalls into your emergency fund for faster comfort." },
+          tip: "Funnel gifts or windfalls into your emergency fund for faster comfort." },
         { title: "6. Medical Bill", desc: "🩺 Unexpected $200 medical bill.", delta: -200,
           gif: "https://media.giphy.com/media/3oz8xIsloV7zOmt81G/giphy.gif",
-          tip: "Tip: Health savings accounts (HSAs) can help cover medical costs tax-free." },
+          tip: "Health savings accounts (HSAs) can help cover medical costs tax-free." },
         { title: "7. Tax Refund", desc: "💰 You get a $500 tax refund!", delta: +500,
           gif: "https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif",
-          tip: "Tip: Adjust withholdings to use your money throughout the year instead of a lump sum." }
+          tip: "Adjust withholdings to use your money throughout the year instead of a lump sum." }
       ];
       let income, currentStep = 0, allocations = [], netDelta = 0, timer;
       const byId = id => document.getElementById(id);
+      const modeRadios = document.getElementsByName('incomeMode');
+      modeRadios.forEach(radio => radio.onchange = () => {
+        if (radio.value === 'custom' && radio.checked) {
+          byId('customInput').classList.remove('hidden');
+          byId('scenarioInput').classList.add('hidden');
+        } else if (radio.value === 'scenario' && radio.checked) {
+          byId('scenarioInput').classList.remove('hidden');
+          byId('customInput').classList.add('hidden');
+        }
+      });
 
       function rebalance(changed) {
         let n = +byId('needs').value, w = +byId('wants').value, s = +byId('save').value;
         let sum = n + w + s, factor = sum ? 100 / sum : 0;
         n *= factor; w *= factor; s *= factor;
         let rN = Math.round(n), rW = Math.round(w), rS = Math.round(s), diff = 100 - (rN + rW + rS);
-        if (changed === 'needs') rN += diff; else if (changed === 'wants') rW += diff; else rS += diff;
+        if (changed === 'needs') rN += diff;
+        else if (changed === 'wants') rW += diff;
+        else rS += diff;
         byId('needs').value = rN; byId('wants').value = rW; byId('save').value = rS;
       }
-
       ['needs','wants','save'].forEach(key => byId(key).addEventListener('input', e => { rebalance(key); updateBudget(); }));
-      byId('showTipBtn').onclick = () => { byId('tipBox').classList.toggle('hidden'); };
+      byId('showTipBtn').onclick = () => byId('tipBox').classList.toggle('hidden');
 
       function updateBudget() {
         const n = +byId('needs').value, w = +byId('wants').value, s = +byId('save').value;
-        byId('needsPct').textContent = n; byId('wantsPct').textContent = w; byId('savePct').textContent = s;
+        byId('needsPct').textContent = n;
+        byId('wantsPct').textContent = w;
+        byId('savePct').textContent = s;
         byId('needsAmt').textContent = `$${Math.round(income * n/100)}`;
         byId('wantsAmt').textContent = `$${Math.round(income * w/100)}`;
         byId('saveAmt').textContent = `$${Math.round(income * s/100)}`;
@@ -156,22 +162,24 @@
       function startTimer(sec=20) {
         clearInterval(timer);
         let t = sec;
-        byId('progress').style.transform='scaleX(1)';
+        byId('progress').style.transform = 'scaleX(1)';
         timer = setInterval(() => {
           t--;
           byId('progress').style.transform = `scaleX(${t/sec})`;
-          if (t===0) { clearInterval(timer); lockStep(true); }
-        },1000);
+          if (t <= 0) { clearInterval(timer); lockStep(true); }
+        }, 1000);
       }
 
-      function lockStep(wasAdjust) {
-        byId('lockSound').play(); clearInterval(timer);
-        const alloc = wasAdjust
+      function lockStep(adjusted) {
+        byId('lockSound').play();
+        clearInterval(timer);
+        const alloc = adjusted
           ? { n:+byId('needs').value, w:+byId('wants').value, s:+byId('save').value }
           : allocations[currentStep-1];
         allocations[currentStep] = alloc;
         netDelta += steps[currentStep].delta;
-        currentStep++; showNext();
+        currentStep++;
+        showNext();
       }
 
       function showNext() {
@@ -190,18 +198,19 @@
       }
 
       function showSummary() {
-        byId('screen-step').classList.add('hidden'); byId('screen-summary').classList.remove('hidden');
+        byId('screen-step').classList.add('hidden');
+        byId('screen-summary').classList.remove('hidden');
         const last = allocations[allocations.length-1];
         const finalSave = Math.round(income * last.s/100) + netDelta;
         const ideal = Math.round(income * 0.2);
         const score = Math.max(0,100 - Math.round(Math.abs(finalSave - ideal)/ideal*100));
         byId('summaryText').innerHTML = `Final Savings: <strong>$${finalSave}</strong><br>Ideal (20%): <strong>$${ideal}</strong>`;
         byId('finalScore').textContent = `Score: ${score}/100`;
-        if (score>=80) { byId('winSound').play(); confetti.create(byId('confetti-canvas'),{resize:true})({particleCount:200}); }
+        if (score >= 80) { byId('winSound').play(); confetti.create(byId('confetti-canvas'),{resize:true})({particleCount:200}); }
       }
 
       byId('startBtn').onclick = () => {
-        income = document.querySelector('input[name=incomeMode]:checked').value==='custom'
+        income = document.querySelector('input[name="incomeMode"]:checked').value === 'custom'
           ? +byId('incomeInput').value : +byId('scenarioSelect').value;
         if (!income) return alert('Enter valid income');
         byId('screen-start').classList.add('hidden'); byId('screen-alloc').classList.remove('hidden');
@@ -212,8 +221,8 @@
       };
 
       ['initNeeds','initWants','initSave'].forEach(id => byId(id).addEventListener('input', () => {
-        const n=+byId('initNeeds').value, w=+byId('initWants').value;
-        byId('initSave').value = Math.max(0,100-n-w);
+        const n = +byId('initNeeds').value, w = +byId('initWants').value;
+        byId('initSave').value = Math.max(0,100 - n - w);
         updateBudget();
       }));
 

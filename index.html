@@ -744,3 +744,479 @@
         // Move to budget allocation screen
         showScreen(screenAllocate);
         setupBudgetScreen();
+      });
+      
+      // Budget allocation screen setup
+      function setupBudgetScreen() {
+        // Display income
+        incomeDisplay.textContent = `${gameState.income.toFixed(2)}`;
+        
+        // Set initial values for inputs
+        needsInput.value = (gameState.income * gameState.allocation.needs / 100).toFixed(2);
+        wantsInput.value = (gameState.income * gameState.allocation.wants / 100).toFixed(2);
+        savingsInput.value = (gameState.income * gameState.allocation.savings / 100).toFixed(2);
+        debtInput.value = (gameState.income * gameState.allocation.debt / 100).toFixed(2);
+        
+        // Set up progress bars
+        updateProgressBars();
+        updateRemainingAmount();
+      }
+      
+      // Update progress bars based on current allocation
+      function updateProgressBars() {
+        document.getElementById('needs-bar').style.width = `${gameState.allocation.needs}%`;
+        document.getElementById('wants-bar').style.width = `${gameState.allocation.wants}%`;
+        document.getElementById('savings-bar').style.width = `${gameState.allocation.savings}%`;
+        document.getElementById('debt-bar').style.width = `${gameState.allocation.debt}%`;
+      }
+      
+      // Calculate and update remaining amount to allocate
+      function updateRemainingAmount() {
+        const totalAllocated = gameState.allocation.needs + gameState.allocation.wants + 
+                              gameState.allocation.savings + gameState.allocation.debt;
+        const remaining = 100 - totalAllocated;
+        const remainingDollars = (gameState.income * remaining / 100).toFixed(2);
+        
+        remainingAmount.textContent = `${remainingDollars} (${remaining}%)`;
+        
+        if (remaining < 0) {
+          remainingAmount.style.color = 'red';
+        } else if (remaining > 0) {
+          remainingAmount.style.color = 'orange';
+        } else {
+          remainingAmount.style.color = 'green';
+        }
+        
+        // Disable submit button if not fully allocated
+        submitBudgetBtn.disabled = remaining !== 0;
+        submitBudgetBtn.style.opacity = remaining !== 0 ? 0.5 : 1;
+      }
+      
+      // Event listeners for sliders
+      needsSlider.addEventListener('input', () => {
+        gameState.allocation.needs = parseInt(needsSlider.value);
+        needsPercent.textContent = `${gameState.allocation.needs}%`;
+        needsInput.value = (gameState.income * gameState.allocation.needs / 100).toFixed(2);
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      wantsSlider.addEventListener('input', () => {
+        gameState.allocation.wants = parseInt(wantsSlider.value);
+        wantsPercent.textContent = `${gameState.allocation.wants}%`;
+        wantsInput.value = (gameState.income * gameState.allocation.wants / 100).toFixed(2);
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      savingsSlider.addEventListener('input', () => {
+        gameState.allocation.savings = parseInt(savingsSlider.value);
+        savingsPercent.textContent = `${gameState.allocation.savings}%`;
+        savingsInput.value = (gameState.income * gameState.allocation.savings / 100).toFixed(2);
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      debtSlider.addEventListener('input', () => {
+        gameState.allocation.debt = parseInt(debtSlider.value);
+        debtPercent.textContent = `${gameState.allocation.debt}%`;
+        debtInput.value = (gameState.income * gameState.allocation.debt / 100).toFixed(2);
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      // Event listeners for numeric inputs
+      needsInput.addEventListener('change', () => {
+        const value = parseFloat(needsInput.value);
+        const percent = Math.round((value / gameState.income) * 100);
+        needsSlider.value = percent;
+        gameState.allocation.needs = percent;
+        needsPercent.textContent = `${percent}%`;
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      wantsInput.addEventListener('change', () => {
+        const value = parseFloat(wantsInput.value);
+        const percent = Math.round((value / gameState.income) * 100);
+        wantsSlider.value = percent;
+        gameState.allocation.wants = percent;
+        wantsPercent.textContent = `${percent}%`;
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      savingsInput.addEventListener('change', () => {
+        const value = parseFloat(savingsInput.value);
+        const percent = Math.round((value / gameState.income) * 100);
+        savingsSlider.value = percent;
+        gameState.allocation.savings = percent;
+        savingsPercent.textContent = `${percent}%`;
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      debtInput.addEventListener('change', () => {
+        const value = parseFloat(debtInput.value);
+        const percent = Math.round((value / gameState.income) * 100);
+        debtSlider.value = percent;
+        gameState.allocation.debt = percent;
+        debtPercent.textContent = `${percent}%`;
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      // Submit budget button
+      submitBudgetBtn.addEventListener('click', () => {
+        // Check if budget is fully allocated
+        const totalAllocated = gameState.allocation.needs + gameState.allocation.wants + 
+                              gameState.allocation.savings + gameState.allocation.debt;
+        
+        if (totalAllocated !== 100) {
+          showAlert('Please allocate 100% of your income before submitting', 'warning');
+          return;
+        }
+        
+        // Unlock First Budget achievement
+        if (!gameState.achievements.firstBudget) {
+          gameState.achievements.firstBudget = true;
+          showAchievement('🏆', 'First Budget', 'Created your first budget plan!');
+        }
+        
+        // Check for other achievements
+        if (gameState.allocation.savings >= 20) {
+          gameState.achievements.savingsPro = true;
+        }
+        
+        if (Math.abs(gameState.allocation.needs - 50) <= 2 && 
+            Math.abs(gameState.allocation.wants - 30) <= 2 && 
+            Math.abs(gameState.allocation.savings + gameState.allocation.debt - 20) <= 2) {
+          gameState.achievements.perfectBalance = true;
+        }
+        
+        if (gameState.allocation.debt >= 15) {
+          gameState.achievements.debtDestroyer = true;
+        }
+        
+        // Select a challenge based on difficulty
+        const difficultyLevel = gameState.difficulty;
+        const challengePool = challenges[difficultyLevel];
+        gameState.challenge = challengePool[Math.floor(Math.random() * challengePool.length)];
+        
+        // Move to challenge screen
+        showScreen(screenChallenge);
+        setupChallengeScreen();
+      });
+      
+      // Reset budget button
+      resetBudgetBtn.addEventListener('click', () => {
+        // Reset to default allocation
+        gameState.allocation = {
+          needs: 50,
+          wants: 30,
+          savings: 15,
+          debt: 5
+        };
+        
+        // Update UI
+        needsSlider.value = gameState.allocation.needs;
+        needsPercent.textContent = `${gameState.allocation.needs}%`;
+        needsInput.value = (gameState.income * gameState.allocation.needs / 100).toFixed(2);
+        
+        wantsSlider.value = gameState.allocation.wants;
+        wantsPercent.textContent = `${gameState.allocation.wants}%`;
+        wantsInput.value = (gameState.income * gameState.allocation.wants / 100).toFixed(2);
+        
+        savingsSlider.value = gameState.allocation.savings;
+        savingsPercent.textContent = `${gameState.allocation.savings}%`;
+        savingsInput.value = (gameState.income * gameState.allocation.savings / 100).toFixed(2);
+        
+        debtSlider.value = gameState.allocation.debt;
+        debtPercent.textContent = `${gameState.allocation.debt}%`;
+        debtInput.value = (gameState.income * gameState.allocation.debt / 100).toFixed(2);
+        
+        updateProgressBars();
+        updateRemainingAmount();
+      });
+      
+      // Setup challenge screen
+      function setupChallengeScreen() {
+        challengeTitle.textContent = `Challenge: ${gameState.challenge.title}`;
+        challengeDescription.textContent = gameState.challenge.description;
+        challengeTip.textContent = gameState.challenge.tip;
+        
+        // Clear previous options
+        challengeOptions.innerHTML = '';
+        
+        // Add challenge options
+        gameState.challenge.options.forEach(option => {
+          const button = document.createElement('button');
+          button.className = 'challenge-option';
+          button.setAttribute('data-option', option.id);
+          button.textContent = option.text;
+          
+          button.addEventListener('click', () => {
+            gameState.challengeResponse = option;
+            showScreen(screenResults);
+            setupResultsScreen();
+          });
+          
+          challengeOptions.appendChild(button);
+        });
+      }
+      
+      // Setup results screen
+      function setupResultsScreen() {
+        // Calculate budget score (0-100)
+        let score = 0;
+        
+        // Basic score based on 50/30/20 rule
+        const needsScore = 25 - Math.abs(gameState.allocation.needs - 50) * 0.5;
+        const wantsScore = 25 - Math.abs(gameState.allocation.wants - 30) * 0.5;
+        const savingsAndDebtScore = 25 - Math.abs((gameState.allocation.savings + gameState.allocation.debt) - 20) * 0.5;
+        
+        score = needsScore + wantsScore + savingsAndDebtScore;
+        
+        // Challenge response score
+        if (gameState.challenge && gameState.challengeResponse) {
+          // Calculate scenario-specific bonus
+          if (gameState.scenario) {
+            if (gameState.scenario.type === 'savings' && gameState.allocation.savings >= 15) {
+              score += 10;
+            } else if (gameState.scenario.type === 'debt' && gameState.allocation.debt >= 10) {
+              score += 10;
+            } else if (gameState.scenario.type === 'invest' && gameState.allocation.savings >= 10) {
+              score += 10;
+            } else if (gameState.scenario.type === 'balance' && 
+                       gameState.allocation.savings >= 10 && 
+                       gameState.allocation.debt >= 5) {
+              score += 10;
+            }
+          }
+          
+          // Challenge response bonus
+          const response = gameState.challengeResponse;
+          if (response.id === 1) {
+            // Using savings for emergency is usually good
+            if (gameState.allocation.savings >= 10) {
+              score += 15;
+            } else {
+              score += 5;
+            }
+          } else if (response.id === 2) {
+            // Using debt is not ideal usually
+            score -= 5;
+          } else if (response.id === 3) {
+            // Cutting expenses is usually good
+            score += 10;
+          }
+        }
+        
+        // Ensure score is within 0-100 range
+        score = Math.min(100, Math.max(0, Math.round(score)));
+        gameState.score = score;
+        
+        // Update UI
+        budgetScore.textContent = score;
+        
+        // Clear previous badges
+        scoreBadges.innerHTML = '';
+        
+        // Add badges based on achievements and score
+        if (score >= 90) {
+          addBadge('Budget Master', 'success');
+        } else if (score >= 75) {
+          addBadge('Good Planner', 'success');
+        } else if (score >= 50) {
+          addBadge('Budget Novice', 'warning');
+        } else {
+          addBadge('Needs Practice', 'danger');
+        }
+        
+        if (gameState.achievements.savingsPro) {
+          addBadge('Savings Pro', 'success');
+        }
+        
+        if (gameState.achievements.perfectBalance) {
+          addBadge('Perfect Balance', 'success');
+        }
+        
+        if (gameState.achievements.debtDestroyer) {
+          addBadge('Debt Destroyer', 'success');
+        }
+        
+        // Provide feedback based on score
+        if (score >= 90) {
+          scoreFeedback.textContent = "Outstanding! Your budget is well-balanced and you made excellent financial decisions.";
+        } else if (score >= 75) {
+          scoreFeedback.textContent = "Great job! Your budget is mostly well-planned. Consider small adjustments to optimize further.";
+        } else if (score >= 50) {
+          scoreFeedback.textContent = "Good start! Your budget needs some work to better align with recommended guidelines.";
+        } else {
+          scoreFeedback.textContent = "Your budget needs significant revision. Try to follow the 50/30/20 rule more closely.";
+        }
+        
+        // Update analysis
+        analysisNeeds.textContent = `${gameState.allocation.needs}%`;
+        analysisWants.textContent = `${gameState.allocation.wants}%`;
+        analysisSavings.textContent = `${gameState.allocation.savings}%`;
+        analysisDebt.textContent = `${gameState.allocation.debt}%`;
+        
+        // Challenge result feedback
+        if (gameState.challengeResponse) {
+          const option = gameState.challengeResponse;
+          let resultText = `You chose to ${option.text.toLowerCase()}. `;
+          
+          if (option.id === 1) {
+            if (gameState.allocation.savings >= 10) {
+              resultText += "Smart choice! Using your emergency fund for unexpected expenses is exactly what it's for.";
+            } else {
+              resultText += "This was a good choice, but your emergency fund might be depleted. Consider increasing your savings rate.";
+            }
+          } else if (option.id === 2) {
+            resultText += "Using credit can help in emergencies, but be careful about high-interest debt. Try to pay it off quickly.";
+          } else if (option.id === 3) {
+            resultText += "Reducing expenses to cover emergencies shows financial flexibility, but having savings would be even better.";
+          }
+          
+          challengeResult.textContent = resultText;
+        }
+        
+        // Update achievements display
+        document.querySelectorAll('.achievement').forEach(achievement => {
+          achievement.classList.remove('unlocked');
+        });
+        
+        if (gameState.achievements.firstBudget) {
+          document.querySelector('.achievement:nth-child(1)').classList.add('unlocked');
+        }
+        
+        if (gameState.achievements.savingsPro) {
+          document.querySelector('.achievement:nth-child(2)').classList.add('unlocked');
+        }
+        
+        if (gameState.achievements.perfectBalance) {
+          document.querySelector('.achievement:nth-child(3)').classList.add('unlocked');
+        }
+        
+        if (gameState.achievements.debtDestroyer) {
+          document.querySelector('.achievement:nth-child(4)').classList.add('unlocked');
+        }
+      }
+      
+      // Helper function to add a badge
+      function addBadge(text, type) {
+        const badge = document.createElement('span');
+        badge.className = `badge badge-${type}`;
+        badge.textContent = text;
+        scoreBadges.appendChild(badge);
+      }
+      
+      // Play again button
+      playAgainBtn.addEventListener('click', () => {
+        // Reset game state but keep achievements
+        const achievements = { ...gameState.achievements };
+        
+        // Reset game state
+        Object.assign(gameState, {
+          income: 0,
+          mode: 'custom',
+          scenario: null,
+          difficulty: gameState.difficulty,
+          allocation: {
+            needs: 50,
+            wants: 30,
+            savings: 15,
+            debt: 5
+          },
+          challenge: null,
+          challengeResponse: null,
+          achievements: achievements
+        });
+        
+        // Go back to start screen
+        showScreen(screenStart);
+      });
+      
+      // Share results button
+      shareResultsBtn.addEventListener('click', () => {
+        const shareText = `I scored ${gameState.score}/100 on Budget Boss! My allocation: Needs ${gameState.allocation.needs}%, Wants ${gameState.allocation.wants}%, Savings ${gameState.allocation.savings}%, Debt ${gameState.allocation.debt}%`;
+        
+        // Try to use Web Share API if available
+        if (navigator.share) {
+          navigator.share({
+            title: 'My Budget Boss Score',
+            text: shareText
+          }).catch(() => {
+            // Fallback - copy to clipboard
+            copyToClipboard(shareText);
+            showAlert('Result copied to clipboard!', 'success');
+          });
+        } else {
+          // Fallback - copy to clipboard
+          copyToClipboard(shareText);
+          showAlert('Result copied to clipboard!', 'success');
+        }
+      });
+      
+      // Help button
+      helpBtn.addEventListener('click', () => {
+        helpModal.style.display = 'flex';
+      });
+      
+      // Close modal buttons
+      closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.closest('.modal-backdrop').style.display = 'none';
+        });
+      });
+      
+      // Helper function to show a screen
+      function showScreen(screen) {
+        // Hide all screens
+        document.querySelectorAll('.screen').forEach(s => {
+          s.classList.remove('active');
+        });
+        
+        // Show the requested screen
+        screen.classList.add('active');
+      }
+      
+      // Helper function to show an alert
+      function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type}`;
+        alertDiv.textContent = message;
+        
+        // Find container and add alert to top
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 3000);
+      }
+      
+      // Helper function to show achievement popup
+      function showAchievement(icon, title, description) {
+        achievementIcon.textContent = icon;
+        achievementTitle.textContent = title;
+        achievementDesc.textContent = description;
+        achievementModal.style.display = 'flex';
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+          achievementModal.style.display = 'none';
+        }, 3000);
+      }
+      
+      // Helper function to copy text to clipboard
+      function copyToClipboard(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }

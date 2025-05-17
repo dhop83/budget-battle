@@ -1,1227 +1,469 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Budget Boss – By Use Money Well LLC</title>
-  <style>
-    :root {
-      --primary: #2c3e50;
-      --secondary: #3498db;
-      --accent: #e74c3c;
-      --success: #2ecc71;
-      --warning: #f39c12;
-      --light: #ecf0f1;
-      --dark: #2c3e50;
-    }
-    
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      color: var(--dark);
-      background-color: #f5f7fa;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      flex: 1;
-    }
-    
-    h1, h2, h3 {
-      color: var(--primary);
-    }
-    
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-    
-    button {
-      background-color: var(--secondary);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s;
-    }
-    
-    button:hover {
-      background-color: #2980b9;
-    }
-    
-    input[type="number"], select {
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 1rem;
-      width: 100%;
-      margin-bottom: 15px;
-    }
-    
-    /* Game screens */
-    .screen {
-      display: none;
-      animation: fadeIn 0.5s;
-    }
-    
-    .screen.active {
-      display: block;
-    }
-    
-    /* Start screen styles */
-    #screen-start {
-      text-align: center;
-    }
-    
-    .mode-selector {
-      display: flex;
-      justify-content: center;
-      margin: 20px 0;
-      gap: 20px;
-    }
-    
-    .mode-selector label {
-      padding: 10px 20px;
-      background-color: var(--light);
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    
-    .mode-selector input:checked + label {
-      background-color: var(--secondary);
-      color: white;
-    }
-    
-    .mode-selector input {
-      display: none;
-    }
-    
-    /* Budget allocation screen */
-    .budget-category {
-      background-color: white;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .budget-slider {
-      width: 100%;
-      margin: 10px 0;
-    }
-    
-    .budget-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .allocation-display {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .progress-bar {
-      height: 20px;
-      background-color: #e0e0e0;
-      border-radius: 10px;
-      margin: 10px 0;
-      overflow: hidden;
-    }
-    
-    .progress-bar-fill {
-      height: 100%;
-      border-radius: 10px;
-      transition: width 0.3s;
-    }
-    
-    /* Results screen */
-    .result-card {
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .badge {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-right: 5px;
-    }
-    
-    .badge-success {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .badge-warning {
-      background-color: #fff3cd;
-      color: #856404;
-    }
-    
-    .badge-danger {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    
-    /* Achievements section */
-    .achievements {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
-    
-    .achievement {
-      background-color: white;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      opacity: 0.5;
-    }
-    
-    .achievement.unlocked {
-      opacity: 1;
-    }
-    
-    .achievement-icon {
-      font-size: 2rem;
-      margin-bottom: 10px;
-    }
-    
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
-    /* Modal styles */
-    .modal-backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    
-    .modal {
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 500px;
-      width: 90%;
-      position: relative;
-    }
-    
-    .close-modal {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      cursor: pointer;
-      font-size: 1.5rem;
-      color: #aaa;
-    }
-    
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 20px;
-      background-color: var(--primary);
-      color: white;
-    }
-    
-    /* Tips box */
-    .tips-box {
-      background-color: #e3f2fd;
-      border-left: 4px solid var(--secondary);
-      padding: 15px;
-      margin: 20px 0;
-      border-radius: 0 8px 8px 0;
-    }
-    
-    /* Alert */
-    .alert {
-      padding: 15px;
-      border-radius: 5px;
-      margin: 15px 0;
-      animation: fadeIn 0.5s;
-    }
-    
-    .alert-success {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .alert-warning {
-      background-color: #fff3cd;
-      color: #856404;
-    }
-    
-    .alert-danger {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Category Master</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+            overflow-x: hidden;
+        }
+        .screen {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .active {
+            display: block;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #3498db;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .expense-item {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px auto;
+            max-width: 500px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .expense-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #16a085;
+        }
+        .category-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .category-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .category-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .housing {
+            background-color: #3498db;
+            color: white;
+        }
+        .transportation {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .food {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .utilities {
+            background-color: #f39c12;
+            color: white;
+        }
+        .entertainment {
+            background-color: #9b59b6;
+            color: white;
+        }
+        .health {
+            background-color: #1abc9c;
+            color: white;
+        }
+        .debt {
+            background-color: #e67e22;
+            color: white;
+        }
+        .savings {
+            background-color: #34495e;
+            color: white;
+        }
+        .custom {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #3498db;
+            transition: width 0.5s;
+        }
+        .score-summary {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .result-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: left;
+        }
+        .correct {
+            background-color: #d5f5e3;
+            border-left: 5px solid #2ecc71;
+        }
+        .incorrect {
+            background-color: #fadbd8;
+            border-left: 5px solid #e74c3c;
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #ffd700;
+            animation: confetti-fall 3s ease-in-out forwards;
+            z-index: 999;
+        }
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        .perfect-score {
+            animation: pulse 1s infinite;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .category-help {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .help-toggle {
+            color: #3498db;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .category-description {
+            margin-top: 10px;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        .tips-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .create-custom-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            display: none;
+        }
+        .create-custom-container input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .custom-category-button {
+            padding: 8px 16px;
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .expense-breakdown {
+            margin-top: 30px;
+        }
+        .chart-container {
+            height: 300px;
+            margin: 20px auto;
+            position: relative;
+        }
+        .chart-bar {
+            position: absolute;
+            bottom: 0;
+            width: 40px;
+            background-color: #3498db;
+            border-radius: 5px 5px 0 0;
+            text-align: center;
+            transition: height 1s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chart-bar-label {
+            padding: 5px;
+            font-size: 12px;
+            color: white;
+            word-wrap: break-word;
+            max-width: 100%;
+            font-weight: bold;
+        }
+        .chart-bar-value {
+            padding: 5px 0;
+            font-size: 11px;
+            color: white;
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+        .expense-summary {
+            margin-top: 30px;
+            text-align: left;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .expense-summary th, .expense-summary td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .expense-summary th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        .expense-summary tr:hover {
+            background-color: #f5f5f5;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- START SCREEN -->
+    <h1>Budget Category Master</h1>
+    
+    <!-- Start Screen -->
     <div id="screen-start" class="screen active">
-      <h1>🏆 Budget Boss</h1>
-      <p class="tagline">Master your money! Allocate across Needs, Wants, Savings & Debt—then conquer financial challenges!</p>
-      
-      <div class="mode-selector">
-        <input type="radio" id="custom-mode" name="incomeMode" value="custom" checked>
-        <label for="custom-mode">My Custom Income</label>
+        <h2>Learn to Master Budget Categories!</h2>
+        <p>Test your knowledge about categorizing expenses properly in a budget.</p>
+        <button id="start-button" class="button">Start Game</button>
+        <button id="how-to-play" class="button">How to Play</button>
         
-        <input type="radio" id="scenario-mode" name="incomeMode" value="scenario">
-        <label for="scenario-mode">Choose a Scenario</label>
-      </div>
-      
-      <div id="customInput">
-        <input type="number" id="incomeInput" min="500" max="50000" placeholder="Enter your monthly income ($)">
-      </div>
-      
-      <div id="scenarioInput" style="display:none;">
-        <select id="scenarioSelect">
-          <option value="" disabled selected>Select a financial scenario</option>
-          <option value="3000" data-type="savings" data-goal="600" data-desc="You've just landed your first job! It's time to build an emergency fund.">Fresh Graduate ($3,000/mo)</option>
-          <option value="4500" data-type="debt" data-goal="500" data-desc="You have some credit card debt to tackle while maintaining your lifestyle.">Mid-Career Professional ($4,500/mo)</option>
-          <option value="2500" data-type="invest" data-goal="400" data-desc="You're ready to start investing for your future while on a tight budget.">Freelancer ($2,500/mo)</option>
-          <option value="6000" data-type="balance" data-goal="1500" data-desc="You need to balance multiple financial priorities with your higher income.">Senior Professional ($6,000/mo)</option>
-        </select>
-        <div id="scenarioDescription" class="tips-box" style="display:none;"></div>
-      </div>
-      
-      <div class="difficulty-selector" style="margin-top: 20px;">
-        <p>Difficulty Level:</p>
-        <div style="display: flex; justify-content: center; gap: 15px;">
-          <button class="difficulty-btn" data-level="easy">Easy</button>
-          <button class="difficulty-btn" data-level="medium">Medium</button>
-          <button class="difficulty-btn" data-level="hard">Hard</button>
+        <div class="tips-box">
+            <h3>Why Budget Categories Matter</h3>
+            <p>Organizing expenses into categories helps you:</p>
+            <ul style="text-align: left;">
+                <li>Identify spending patterns</li>
+                <li>Find areas to cut back</li>
+                <li>Make informed financial decisions</li>
+                <li>Plan for future expenses</li>
+            </ul>
         </div>
-      </div>
-      
-      <button id="startBtn" style="margin-top: 30px;">Get Started</button>
-      
-      <div class="tips-box" style="margin-top: 30px;">
-        <h3>💡 Quick Tips</h3>
-        <p>Many financial experts recommend the <strong>50/30/20 rule</strong>:</p>
-        <ul>
-          <li><strong>50%</strong> for Needs: Housing, utilities, groceries, transportation</li>
-          <li><strong>30%</strong> for Wants: Entertainment, dining out, hobbies</li>
-          <li><strong>20%</strong> for Savings & Debt: Emergency fund, retirement, debt payments</li>
-        </ul>
-      </div>
     </div>
     
-    <!-- BUDGET ALLOCATION SCREEN -->
-    <div id="screen-allocate" class="screen">
-      <h1>Budget Allocation</h1>
-      <p>Income: <span id="income-display"></span>/month</p>
-      <p>Remaining to allocate: <span id="remaining-amount">$0</span></p>
-      
-      <div class="budget-category" id="category-needs">
-        <h2>😊 Needs (50%)</h2>
-        <p>Essential expenses like housing, utilities, groceries, transportation</p>
-        <div class="budget-controls">
-          <input type="range" class="budget-slider" id="needs-slider" min="0" max="100" value="50">
-          <input type="number" id="needs-input" min="0">
-          <span id="needs-percent">50%</span>
-        </div>
-      </div>
-      
-      <div class="budget-category" id="category-wants">
-        <h2>🎮 Wants (30%)</h2>
-        <p>Non-essential expenses like entertainment, dining out, hobbies</p>
-        <div class="budget-controls">
-          <input type="range" class="budget-slider" id="wants-slider" min="0" max="100" value="30">
-          <input type="number" id="wants-input" min="0">
-          <span id="wants-percent">30%</span>
-        </div>
-      </div>
-      
-      <div class="budget-category" id="category-savings">
-        <h2>💰 Savings (15%)</h2>
-        <p>Emergency fund, retirement contributions, investments</p>
-        <div class="budget-controls">
-          <input type="range" class="budget-slider" id="savings-slider" min="0" max="100" value="15">
-          <input type="number" id="savings-input" min="0">
-          <span id="savings-percent">15%</span>
-        </div>
-      </div>
-      
-      <div class="budget-category" id="category-debt">
-        <h2>💳 Debt Payments (5%)</h2>
-        <p>Credit card payments, student loans, other debt</p>
-        <div class="budget-controls">
-          <input type="range" class="budget-slider" id="debt-slider" min="0" max="100" value="5">
-          <input type="number" id="debt-input" min="0">
-          <span id="debt-percent">5%</span>
-        </div>
-      </div>
-      
-      <div class="allocation-display">
-        <h3>Your Budget Breakdown</h3>
-        <div class="progress-bar">
-          <div class="progress-bar-fill" id="needs-bar" style="width: 50%; background-color: #3498db;"></div>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-bar-fill" id="wants-bar" style="width: 30%; background-color: #e74c3c;"></div>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-bar-fill" id="savings-bar" style="width: 15%; background-color: #2ecc71;"></div>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-bar-fill" id="debt-bar" style="width: 5%; background-color: #f39c12;"></div>
-        </div>
-      </div>
-      
-      <button id="submitBudgetBtn" style="margin-top: 20px;">Submit Budget Plan</button>
-      <button id="resetBudgetBtn" style="margin-top: 10px; background-color: #95a5a6;">Reset</button>
-    </div>
-    
-    <!-- SCENARIO CHALLENGE SCREEN -->
-    <div id="screen-challenge" class="screen">
-      <h1>Financial Challenge</h1>
-      <div class="result-card">
-        <h2 id="challenge-title">Challenge: Unexpected Expense</h2>
-        <p id="challenge-description">Oh no! Your car needs urgent repairs costing $600. How will this affect your budget?</p>
+    <!-- How to Play Screen -->
+    <div id="screen-how-to-play" class="screen">
+        <h2>How to Play</h2>
+        <p>You'll be shown different expenses one at a time.</p>
+        <p>For each expense, decide which budget category it belongs in:</p>
         
-        <div id="challenge-options">
-          <button class="challenge-option" data-option="1">Use emergency savings ($600)</button>
-          <button class="challenge-option" data-option="2">Put it on credit card</button>
-          <button class="challenge-option" data-option="3">Reduce wants spending this month</button>
+        <div class="category-help">
+            <div><span class="category-button housing">Housing</span> <span class="category-description">Rent, mortgage, property taxes, repairs, etc.</span></div>
+            <div><span class="category-button transportation">Transportation</span> <span class="category-description">Car payments, gas, public transit, maintenance, etc.</span></div>
+            <div><span class="category-button food">Food</span> <span class="category-description">Groceries, dining out, coffee shops, etc.</span></div>
+            <div><span class="category-button utilities">Utilities</span> <span class="category-description">Electricity, water, internet, phone, etc.</span></div>
+            <div><span class="category-button entertainment">Entertainment</span> <span class="category-description">Streaming services, movies, hobbies, etc.</span></div>
+            <div><span class="category-button health">Health</span> <span class="category-description">Insurance, medications, doctor visits, etc.</span></div>
+            <div><span class="category-button debt">Debt Payment</span> <span class="category-description">Credit cards, student loans, personal loans, etc.</span></div>
+            <div><span class="category-button savings">Savings</span> <span class="category-description">Emergency fund, retirement, big purchases, etc.</span></div>
+            <div><span class="category-button custom">Custom</span> <span class="category-description">Create your own category for expenses that don't fit the standard ones.</span></div>
         </div>
-      </div>
-      
-      <div class="tips-box">
-        <h3>💡 Tip</h3>
-        <p id="challenge-tip">Having an emergency fund helps you avoid going into debt for unexpected expenses!</p>
-      </div>
+        
+        <p>After categorizing all expenses, you'll see your score and a breakdown of your spending by category!</p>
+        <button id="back-to-start" class="button">Back to Start</button>
     </div>
     
-    <!-- RESULTS SCREEN -->
+    <!-- Game Screen -->
+    <div id="screen-game" class="screen">
+        <div class="progress-bar">
+            <div id="progress" class="progress" style="width: 0%;"></div>
+        </div>
+        
+        <h2>Categorize This Expense:</h2>
+        <div class="expense-item">
+            <div id="expense-description">Monthly Netflix subscription</div>
+            <div class="expense-amount">$<span id="expense-amount">14.99</span></div>
+        </div>
+        
+        <div class="category-options">
+            <button class="category-button housing" data-category="housing">Housing</button>
+            <button class="category-button transportation" data-category="transportation">Transportation</button>
+            <button class="category-button food" data-category="food">Food</button>
+            <button class="category-button utilities" data-category="utilities">Utilities</button>
+            <button class="category-button entertainment" data-category="entertainment">Entertainment</button>
+            <button class="category-button health" data-category="health">Health</button>
+            <button class="category-button debt" data-category="debt">Debt Payment</button>
+            <button class="category-button savings" data-category="savings">Savings</button>
+            <button class="category-button custom" id="custom-category-btn">Custom Category</button>
+        </div>
+        
+        <div id="create-custom-container" class="create-custom-container">
+            <p>Create a custom category name:</p>
+            <input type="text" id="custom-category-name" placeholder="Type category name...">
+            <button id="submit-custom-category" class="custom-category-button">Create & Select</button>
+        </div>
+        
+        <div class="help-toggle" id="show-help">Need help with categories?</div>
+        <div id="category-help" class="category-help" style="display: none;">
+            <div><span class="category-button housing">Housing</span> <span class="category-description">Rent, mortgage, property taxes, repairs, clothes, etc.</span></div>
+            <div><span class="category-button transportation">Transportation</span> <span class="category-description">Car payments, gas, public transit, maintenance, etc.</span></div>
+            <div><span class="category-button food">Food</span> <span class="category-description">Groceries, dining out, coffee shops, etc.</span></div>
+            <div><span class="category-button utilities">Utilities</span> <span class="category-description">Electricity, water, internet, phone, etc.</span></div>
+            <div><span class="category-button entertainment">Entertainment</span> <span class="category-description">Streaming services, movies, hobbies, etc.</span></div>
+            <div><span class="category-button health">Health</span> <span class="category-description">Insurance, medications, doctor visits, etc.</span></div>
+            <div><span class="category-button debt">Debt Payment</span> <span class="category-description">Credit cards, student loans, personal loans, etc.</span></div>
+            <div><span class="category-button savings">Savings</span> <span class="category-description">Emergency fund, retirement, big purchases, etc.</span></div>
+            <div><span class="category-button custom">Custom</span> <span class="category-description">Create your own category for unique expenses.</span></div>
+        </div>
+    </div>
+    
+    <!-- Results Screen -->
     <div id="screen-results" class="screen">
-      <h1>Budget Results</h1>
-      
-      <div class="result-card">
-        <h2>Budget Score: <span id="budget-score">85</span>/100</h2>
-        <div id="score-badges">
-          <span class="badge badge-success">Balance Master</span>
-          <span class="badge badge-warning">Savings Starter</span>
+        <h2>Your Results</h2>
+        <div class="score-summary">
+            <p>You scored: <span id="final-score">0</span>/<span id="total-questions">15</span></p>
+            <p id="score-message">Great job!</p>
         </div>
-        <p id="score-feedback">Great job! Your budget is well-balanced. Consider increasing your savings a bit more to reach financial goals faster.</p>
-      </div>
-      
-      <div class="result-card">
-        <h2>Budget Analysis</h2>
-        <ul id="budget-analysis">
-          <li>Needs: <span id="analysis-needs">50%</span> (Recommended: 50%)</li>
-          <li>Wants: <span id="analysis-wants">30%</span> (Recommended: 30%)</li>
-          <li>Savings: <span id="analysis-savings">15%</span> (Recommended: 15%)</li>
-          <li>Debt: <span id="analysis-debt">5%</span> (Recommended: 5%)</li>
-        </ul>
-      </div>
-      
-      <div class="result-card">
-        <h2>Challenge Response</h2>
-        <p id="challenge-result">You chose to use your emergency savings. Great choice! This is exactly what emergency funds are for.</p>
-      </div>
-      
-      <h2>Achievements</h2>
-      <div class="achievements">
-        <div class="achievement unlocked">
-          <div class="achievement-icon">🏆</div>
-          <h3>First Budget</h3>
-          <p>Created your first budget plan</p>
+        
+        <div class="expense-breakdown">
+            <h3>Your Expense Breakdown</h3>
+            <p>See where your money is going based on the expenses you categorized:</p>
+            
+            <div id="chart-container" class="chart-container">
+                <!-- Bars will be added here dynamically -->
+            </div>
+            
+            <div id="chart-legend" class="legend">
+                <!-- Legend items will be added here dynamically -->
+            </div>
+            
+            <table id="expense-summary" class="expense-summary">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Total Amount</th>
+                        <th>Percentage</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be added here dynamically -->
+                </tbody>
+            </table>
         </div>
-        <div class="achievement">
-          <div class="achievement-icon">💰</div>
-          <h3>Savings Pro</h3>
-          <p>Allocated 20%+ to savings</p>
+        
+        <div class="tips-box">
+            <h3>Budgeting Tips</h3>
+            <ul style="text-align: left;">
+                <li>Use the 50/30/20 rule: 50% for needs, 30% for wants, 20% for savings</li>
+                <li>Review your budget categories monthly to catch areas of overspending</li>
+                <li>Make sure to include irregular expenses in your budget (car repairs, medical, etc.)</li>
+                <li>Consider using budgeting apps that can help categorize expenses automatically</li>
+            </ul>
         </div>
-        <div class="achievement">
-          <div class="achievement-icon">⚖️</div>
-          <h3>Perfect Balance</h3>
-          <p>Created an ideal 50/30/20 budget</p>
-        </div>
-        <div class="achievement">
-          <div class="achievement-icon">🚫</div>
-          <h3>Debt Destroyer</h3>
-          <p>Prioritized debt payments</p>
-        </div>
-      </div>
-      
-      <button id="playAgainBtn" style="margin-top: 20px;">Play Again</button>
-      <button id="shareResultsBtn" style="margin-top: 10px; background-color: #3b5998;">Share Results</button>
+        
+        <div id="results-details"></div>
+        <button id="play-again" class="button">Play Again</button>
     </div>
-  </div>
-  
-  <!-- MODALS -->
-  <div class="modal-backdrop" id="helpModal">
-    <div class="modal">
-      <span class="close-modal">&times;</span>
-      <h2>How to Play Budget Boss</h2>
-      <ol>
-        <li><strong>Choose Your Mode:</strong> Enter your own income or select a pre-made scenario</li>
-        <li><strong>Allocate Your Budget:</strong> Divide your income between Needs, Wants, Savings and Debt</li>
-        <li><strong>Face a Challenge:</strong> Make a financial decision based on a random event</li>
-        <li><strong>Review Results:</strong> See how well your budget worked and what you could improve</li>
-      </ol>
-      <h3>Budget Tips</h3>
-      <ul>
-        <li>Aim for the 50/30/20 rule as a starting point</li>
-        <li>Always have some money allocated to emergency savings</li>
-        <li>Prioritize high-interest debt payments</li>
-      </ul>
-    </div>
-  </div>
-  
-  <div class="modal-backdrop" id="achievementModal">
-    <div class="modal">
-      <span class="close-modal">&times;</span>
-      <h2>Achievement Unlocked!</h2>
-      <div style="text-align: center; margin: 20px 0;">
-        <div style="font-size: 4rem;" id="achievement-modal-icon">🏆</div>
-        <h3 id="achievement-modal-title">First Budget</h3>
-        <p id="achievement-modal-desc">You've created your first budget plan!</p>
-      </div>
-    </div>
-  </div>
-  
-  <footer>
-    <p>&copy; 2025 Use Money Well LLC. Created to help you build financial freedom.</p>
-    <button id="helpBtn">How to Play</button>
-  </footer>
 
-  <script>
-    (function(){
-      // Game state
-      const gameState = {
-        income: 0,
-        mode: 'custom',
-        scenario: null,
-        difficulty: 'medium',
-        allocation: {
-          needs: 50,
-          wants: 30,
-          savings: 15,
-          debt: 5
-        },
-        challenge: null,
-        challengeResponse: null,
-        achievements: {
-          firstBudget: false,
-          savingsPro: false,
-          perfectBalance: false,
-          debtDestroyer: false
-        }
-      };
-      
-      // Challenge templates
-      const challenges = {
-        easy: [
-          {
-            title: "Unexpected Home Repair",
-            description: "Your water heater broke and needs to be replaced immediately, costing $500. How do you handle this?",
-            options: [
-              {id: 1, text: "Use emergency savings ($500)", impact: {savings: -500}},
-              {id: 2, text: "Put it on credit card", impact: {debt: 500}},
-              {id: 3, text: "Cut back on wants this month", impact: {wants: -500}}
-            ],
-            tip: "This is why emergency funds are important! Aim to save 3-6 months of expenses."
-          },
-          {
-            title: "Surprise Medical Bill",
-            description: "You received an unexpected medical bill for $300. What's your plan?",
-            options: [
-              {id: 1, text: "Pay from emergency fund", impact: {savings: -300}},
-              {id: 2, text: "Set up a payment plan", impact: {debt: 300}},
-              {id: 3, text: "Reduce eating out this month", impact: {wants: -300}}
-            ],
-            tip: "Medical expenses are one of the most common unexpected costs families face."
-          }
-        ],
-        medium: [
-          {
-            title: "Car Trouble",
-            description: "Your car needs urgent repairs costing $800. How will you manage this expense?",
-            options: [
-              {id: 1, text: "Use emergency savings", impact: {savings: -800}},
-              {id: 2, text: "Finance through repair shop (12% interest)", impact: {debt: 900}},
-              {id: 3, text: "Skip a vacation you planned", impact: {wants: -800}}
-            ],
-            tip: "Transportation costs are often underestimated in budgets. Consider setting aside funds specifically for vehicle maintenance."
-          },
-          {
-            title: "Income Opportunity",
-            description: "You have a chance to take a course that could boost your income, but it costs $1000. What do you do?",
-            options: [
-              {id: 1, text: "Use money from savings", impact: {savings: -1000, income: 200}},
-              {id: 2, text: "Skip it - can't afford it now", impact: {}},
-              {id: 3, text: "Put it on credit card", impact: {debt: 1000, income: 200}}
-            ],
-            tip: "Sometimes going into temporary debt for education or skills can be an investment in your future earnings."
-          }
-        ],
-        hard: [
-          {
-            title: "Major Life Event",
-            description: "A family emergency requires immediate travel costing $1,500 plus time off work reducing this month's income by $500. How do you handle this?",
-            options: [
-              {id: 1, text: "Use emergency fund + reduce wants", impact: {savings: -1000, wants: -500, income: -500}},
-              {id: 2, text: "Put all costs on credit cards", impact: {debt: 1500, income: -500}},
-              {id: 3, text: "Borrow from family/friends", impact: {debt: 1500, income: -500}}
-            ],
-            tip: "Major life events often impact both expenses AND income - this is why having a robust emergency fund is crucial."
-          },
-          {
-            title: "Job Loss",
-            description: "You've been laid off. You expect to find a new job within 3 months. How do you adjust your budget during this time?",
-            options: [
-              {id: 1, text: "Use emergency fund, cut wants by 80%", impact: {savings: -2000, wants: -80}},
-              {id: 2, text: "Use credit cards to maintain lifestyle", impact: {debt: 5000}},
-              {id: 3, text: "Dramatically cut all expenses, find temporary work", impact: {needs: -30, wants: -90, income: -60}}
-            ],
-            tip: "Job loss is why financial experts recommend having 3-6 months of expenses saved in an emergency fund."
-          }
-        ]
-      };
-      
-      // DOM elements
-      const screenStart = document.getElementById('screen-start');
-      const screenAllocate = document.getElementById('screen-allocate');
-      const screenChallenge = document.getElementById('screen-challenge');
-      const screenResults = document.getElementById('screen-results');
-      
-      // Start screen elements
-      const customInput = document.getElementById('customInput');
-      const scenarioInput = document.getElementById('scenarioInput');
-      const incomeInput = document.getElementById('incomeInput');
-      const scenarioSelect = document.getElementById('scenarioSelect');
-      const scenarioDescription = document.getElementById('scenarioDescription');
-      const startBtn = document.getElementById('startBtn');
-      const difficultyBtns = document.querySelectorAll('.difficulty-btn');
-      
-      // Budget allocation elements
-      const incomeDisplay = document.getElementById('income-display');
-      const remainingAmount = document.getElementById('remaining-amount');
-      const needsSlider = document.getElementById('needs-slider');
-      const needsInput = document.getElementById('needs-input');
-      const needsPercent = document.getElementById('needs-percent');
-      const wantsSlider = document.getElementById('wants-slider');
-      const wantsInput = document.getElementById('wants-input');
-      const wantsPercent = document.getElementById('wants-percent');
-      const savingsSlider = document.getElementById('savings-slider');
-      const savingsInput = document.getElementById('savings-input');
-      const savingsPercent = document.getElementById('savings-percent');
-      const debtSlider = document.getElementById('debt-slider');
-      const debtInput = document.getElementById('debt-input');
-      const debtPercent = document.getElementById('debt-percent');
-      const submitBudgetBtn = document.getElementById('submitBudgetBtn');
-      const resetBudgetBtn = document.getElementById('resetBudgetBtn');
-      
-      // Challenge screen elements
-      const challengeTitle = document.getElementById('challenge-title');
-      const challengeDescription = document.getElementById('challenge-description');
-      const challengeOptions = document.getElementById('challenge-options');
-      const challengeTip = document.getElementById('challenge-tip');
-      
-      // Results screen elements
-      const budgetScore = document.getElementById('budget-score');
-      const scoreBadges = document.getElementById('score-badges');
-      const scoreFeedback = document.getElementById('score-feedback');
-      const analysisNeeds = document.getElementById('analysis-needs');
-      const analysisWants = document.getElementById('analysis-wants');
-      const analysisSavings = document.getElementById('analysis-savings');
-      const analysisDebt = document.getElementById('analysis-debt');
-      const challengeResult = document.getElementById('challenge-result');
-      const playAgainBtn = document.getElementById('playAgainBtn');
-      const shareResultsBtn = document.getElementById('shareResultsBtn');
-      
-      // Modal elements
-      const helpModal = document.getElementById('helpModal');
-      const achievementModal = document.getElementById('achievementModal');
-      const achievementIcon = document.getElementById('achievement-modal-icon');
-      const achievementTitle = document.getElementById('achievement-modal-title');
-      const achievementDesc = document.getElementById('achievement-modal-desc');
-      const helpBtn = document.getElementById('helpBtn');
-      const closeModalBtns = document.querySelectorAll('.close-modal');
-      
-      // Event listeners for mode selection
-      document.getElementsByName('incomeMode').forEach(radio => {
-        radio.addEventListener('change', e => {
-          if (e.target.value === 'custom') {
-            customInput.style.display = 'block';
-            scenarioInput.style.display = 'none';
-            gameState.mode = 'custom';
-          } else {
-            customInput.style.display = 'none';
-            scenarioInput.style.display = 'block';
-            gameState.mode = 'scenario';
-          }
-        });
-      });
-      
-      // Event listener for scenario selection
-      scenarioSelect.addEventListener('change', () => {
-        const selectedOption = scenarioSelect.options[scenarioSelect.selectedIndex];
-        const description = selectedOption.getAttribute('data-desc');
-        if (description) {
-          scenarioDescription.textContent = description;
-          scenarioDescription.style.display = 'block';
-        } else {
-          scenarioDescription.style.display = 'none';
-        }
-      });
-      
-      // Event listeners for difficulty buttons
-      difficultyBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          // Remove active class from all buttons
-          difficultyBtns.forEach(b => b.style.backgroundColor = '');
-          
-          // Add active class to selected button
-          btn.style.backgroundColor = '#2980b9';
-          gameState.difficulty = btn.getAttribute('data-level');
-        });
-      });
-      
-      // Set the default difficulty button to active
-      document.querySelector(`.difficulty-btn[data-level="${gameState.difficulty}"]`).style.backgroundColor = '#2980b9';
-      
-      // Start button event listener
-      startBtn.addEventListener('click', () => {
-        let income = 0;
-        
-        if (gameState.mode === 'custom') {
-          income = parseFloat(incomeInput.value);
-          if (isNaN(income) || income <= 0) {
-            showAlert('Please enter a valid income amount', 'warning');
-            return;
-          }
-          gameState.scenario = null;
-        } else {
-          const selectedOption = scenarioSelect.options[scenarioSelect.selectedIndex];
-          if (!selectedOption || selectedOption.value === '') {
-            showAlert('Please select a scenario', 'warning');
-            return;
-          }
-          
-          income = parseFloat(selectedOption.value);
-          gameState.scenario = {
-            type: selectedOption.getAttribute('data-type'),
-            goal: parseFloat(selectedOption.getAttribute('data-goal'))
-          };
-        }
-        
-        gameState.income = income;
-        
-        // Move to budget allocation screen
-        showScreen(screenAllocate);
-        setupBudgetScreen();
-      });
-      
-      // Budget allocation screen setup
-      function setupBudgetScreen() {
-        // Display income
-        incomeDisplay.textContent = `${gameState.income.toFixed(2)}`;
-        
-        // Set initial values for inputs
-        needsInput.value = (gameState.income * gameState.allocation.needs / 100).toFixed(2);
-        wantsInput.value = (gameState.income * gameState.allocation.wants / 100).toFixed(2);
-        savingsInput.value = (gameState.income * gameState.allocation.savings / 100).toFixed(2);
-        debtInput.value = (gameState.income * gameState.allocation.debt / 100).toFixed(2);
-        
-        // Set up progress bars
-        updateProgressBars();
-        updateRemainingAmount();
-      }
-      
-      // Update progress bars based on current allocation
-      function updateProgressBars() {
-        document.getElementById('needs-bar').style.width = `${gameState.allocation.needs}%`;
-        document.getElementById('wants-bar').style.width = `${gameState.allocation.wants}%`;
-        document.getElementById('savings-bar').style.width = `${gameState.allocation.savings}%`;
-        document.getElementById('debt-bar').style.width = `${gameState.allocation.debt}%`;
-      }
-      
-      // Calculate and update remaining amount to allocate
-      function updateRemainingAmount() {
-        const totalAllocated = gameState.allocation.needs + gameState.allocation.wants + 
-                              gameState.allocation.savings + gameState.allocation.debt;
-        const remaining = 100 - totalAllocated;
-        const remainingDollars = (gameState.income * remaining / 100).toFixed(2);
-        
-        remainingAmount.textContent = `${remainingDollars} (${remaining}%)`;
-        
-        if (remaining < 0) {
-          remainingAmount.style.color = 'red';
-        } else if (remaining > 0) {
-          remainingAmount.style.color = 'orange';
-        } else {
-          remainingAmount.style.color = 'green';
-        }
-        
-        // Disable submit button if not fully allocated
-        submitBudgetBtn.disabled = remaining !== 0;
-        submitBudgetBtn.style.opacity = remaining !== 0 ? 0.5 : 1;
-      }
-      
-      // Event listeners for sliders
-      needsSlider.addEventListener('input', () => {
-        gameState.allocation.needs = parseInt(needsSlider.value);
-        needsPercent.textContent = `${gameState.allocation.needs}%`;
-        needsInput.value = (gameState.income * gameState.allocation.needs / 100).toFixed(2);
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      wantsSlider.addEventListener('input', () => {
-        gameState.allocation.wants = parseInt(wantsSlider.value);
-        wantsPercent.textContent = `${gameState.allocation.wants}%`;
-        wantsInput.value = (gameState.income * gameState.allocation.wants / 100).toFixed(2);
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      savingsSlider.addEventListener('input', () => {
-        gameState.allocation.savings = parseInt(savingsSlider.value);
-        savingsPercent.textContent = `${gameState.allocation.savings}%`;
-        savingsInput.value = (gameState.income * gameState.allocation.savings / 100).toFixed(2);
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      debtSlider.addEventListener('input', () => {
-        gameState.allocation.debt = parseInt(debtSlider.value);
-        debtPercent.textContent = `${gameState.allocation.debt}%`;
-        debtInput.value = (gameState.income * gameState.allocation.debt / 100).toFixed(2);
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      // Event listeners for numeric inputs
-      needsInput.addEventListener('change', () => {
-        const value = parseFloat(needsInput.value);
-        const percent = Math.round((value / gameState.income) * 100);
-        needsSlider.value = percent;
-        gameState.allocation.needs = percent;
-        needsPercent.textContent = `${percent}%`;
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      wantsInput.addEventListener('change', () => {
-        const value = parseFloat(wantsInput.value);
-        const percent = Math.round((value / gameState.income) * 100);
-        wantsSlider.value = percent;
-        gameState.allocation.wants = percent;
-        wantsPercent.textContent = `${percent}%`;
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      savingsInput.addEventListener('change', () => {
-        const value = parseFloat(savingsInput.value);
-        const percent = Math.round((value / gameState.income) * 100);
-        savingsSlider.value = percent;
-        gameState.allocation.savings = percent;
-        savingsPercent.textContent = `${percent}%`;
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      debtInput.addEventListener('change', () => {
-        const value = parseFloat(debtInput.value);
-        const percent = Math.round((value / gameState.income) * 100);
-        debtSlider.value = percent;
-        gameState.allocation.debt = percent;
-        debtPercent.textContent = `${percent}%`;
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      // Submit budget button
-      submitBudgetBtn.addEventListener('click', () => {
-        // Check if budget is fully allocated
-        const totalAllocated = gameState.allocation.needs + gameState.allocation.wants + 
-                              gameState.allocation.savings + gameState.allocation.debt;
-        
-        if (totalAllocated !== 100) {
-          showAlert('Please allocate 100% of your income before submitting', 'warning');
-          return;
-        }
-        
-        // Unlock First Budget achievement
-        if (!gameState.achievements.firstBudget) {
-          gameState.achievements.firstBudget = true;
-          showAchievement('🏆', 'First Budget', 'Created your first budget plan!');
-        }
-        
-        // Check for other achievements
-        if (gameState.allocation.savings >= 20) {
-          gameState.achievements.savingsPro = true;
-        }
-        
-        if (Math.abs(gameState.allocation.needs - 50) <= 2 && 
-            Math.abs(gameState.allocation.wants - 30) <= 2 && 
-            Math.abs(gameState.allocation.savings + gameState.allocation.debt - 20) <= 2) {
-          gameState.achievements.perfectBalance = true;
-        }
-        
-        if (gameState.allocation.debt >= 15) {
-          gameState.achievements.debtDestroyer = true;
-        }
-        
-        // Select a challenge based on difficulty
-        const difficultyLevel = gameState.difficulty;
-        const challengePool = challenges[difficultyLevel];
-        gameState.challenge = challengePool[Math.floor(Math.random() * challengePool.length)];
-        
-        // Move to challenge screen
-        showScreen(screenChallenge);
-        setupChallengeScreen();
-      });
-      
-      // Reset budget button
-      resetBudgetBtn.addEventListener('click', () => {
-        // Reset to default allocation
-        gameState.allocation = {
-          needs: 50,
-          wants: 30,
-          savings: 15,
-          debt: 5
-        };
-        
-        // Update UI
-        needsSlider.value = gameState.allocation.needs;
-        needsPercent.textContent = `${gameState.allocation.needs}%`;
-        needsInput.value = (gameState.income * gameState.allocation.needs / 100).toFixed(2);
-        
-        wantsSlider.value = gameState.allocation.wants;
-        wantsPercent.textContent = `${gameState.allocation.wants}%`;
-        wantsInput.value = (gameState.income * gameState.allocation.wants / 100).toFixed(2);
-        
-        savingsSlider.value = gameState.allocation.savings;
-        savingsPercent.textContent = `${gameState.allocation.savings}%`;
-        savingsInput.value = (gameState.income * gameState.allocation.savings / 100).toFixed(2);
-        
-        debtSlider.value = gameState.allocation.debt;
-        debtPercent.textContent = `${gameState.allocation.debt}%`;
-        debtInput.value = (gameState.income * gameState.allocation.debt / 100).toFixed(2);
-        
-        updateProgressBars();
-        updateRemainingAmount();
-      });
-      
-      // Setup challenge screen
-      function setupChallengeScreen() {
-        challengeTitle.textContent = `Challenge: ${gameState.challenge.title}`;
-        challengeDescription.textContent = gameState.challenge.description;
-        challengeTip.textContent = gameState.challenge.tip;
-        
-        // Clear previous options
-        challengeOptions.innerHTML = '';
-        
-        // Add challenge options
-        gameState.challenge.options.forEach(option => {
-          const button = document.createElement('button');
-          button.className = 'challenge-option';
-          button.setAttribute('data-option', option.id);
-          button.textContent = option.text;
-          
-          button.addEventListener('click', () => {
-            gameState.challengeResponse = option;
-            showScreen(screenResults);
-            setupResultsScreen();
-          });
-          
-          challengeOptions.appendChild(button);
-        });
-      }
-      
-      // Setup results screen
-      function setupResultsScreen() {
-        // Calculate budget score (0-100)
-        let score = 0;
-        
-        // Basic score based on 50/30/20 rule
-        const needsScore = 25 - Math.abs(gameState.allocation.needs - 50) * 0.5;
-        const wantsScore = 25 - Math.abs(gameState.allocation.wants - 30) * 0.5;
-        const savingsAndDebtScore = 25 - Math.abs((gameState.allocation.savings + gameState.allocation.debt) - 20) * 0.5;
-        
-        score = needsScore + wantsScore + savingsAndDebtScore;
-        
-        // Challenge response score
-        if (gameState.challenge && gameState.challengeResponse) {
-          // Calculate scenario-specific bonus
-          if (gameState.scenario) {
-            if (gameState.scenario.type === 'savings' && gameState.allocation.savings >= 15) {
-              score += 10;
-            } else if (gameState.scenario.type === 'debt' && gameState.allocation.debt >= 10) {
-              score += 10;
-            } else if (gameState.scenario.type === 'invest' && gameState.allocation.savings >= 10) {
-              score += 10;
-            } else if (gameState.scenario.type === 'balance' && 
-                       gameState.allocation.savings >= 10 && 
-                       gameState.allocation.debt >= 5) {
-              score += 10;
-            }
-          }
-          
-          // Challenge response bonus
-          const response = gameState.challengeResponse;
-          if (response.id === 1) {
-            // Using savings for emergency is usually good
-            if (gameState.allocation.savings >= 10) {
-              score += 15;
-            } else {
-              score += 5;
-            }
-          } else if (response.id === 2) {
-            // Using debt is not ideal usually
-            score -= 5;
-          } else if (response.id === 3) {
-            // Cutting expenses is usually good
-            score += 10;
-          }
-        }
-        
-        // Ensure score is within 0-100 range
-        score = Math.min(100, Math.max(0, Math.round(score)));
-        gameState.score = score;
-        
-        // Update UI
-        budgetScore.textContent = score;
-        
-        // Clear previous badges
-        scoreBadges.innerHTML = '';
-        
-        // Add badges based on achievements and score
-        if (score >= 90) {
-          addBadge('Budget Master', 'success');
-        } else if (score >= 75) {
-          addBadge('Good Planner', 'success');
-        } else if (score >= 50) {
-          addBadge('Budget Novice', 'warning');
-        } else {
-          addBadge('Needs Practice', 'danger');
-        }
-        
-        if (gameState.achievements.savingsPro) {
-          addBadge('Savings Pro', 'success');
-        }
-        
-        if (gameState.achievements.perfectBalance) {
-          addBadge('Perfect Balance', 'success');
-        }
-        
-        if (gameState.achievements.debtDestroyer) {
-          addBadge('Debt Destroyer', 'success');
-        }
-        
-        // Provide feedback based on score
-        if (score >= 90) {
-          scoreFeedback.textContent = "Outstanding! Your budget is well-balanced and you made excellent financial decisions.";
-        } else if (score >= 75) {
-          scoreFeedback.textContent = "Great job! Your budget is mostly well-planned. Consider small adjustments to optimize further.";
-        } else if (score >= 50) {
-          scoreFeedback.textContent = "Good start! Your budget needs some work to better align with recommended guidelines.";
-        } else {
-          scoreFeedback.textContent = "Your budget needs significant revision. Try to follow the 50/30/20 rule more closely.";
-        }
-        
-        // Update analysis
-        analysisNeeds.textContent = `${gameState.allocation.needs}%`;
-        analysisWants.textContent = `${gameState.allocation.wants}%`;
-        analysisSavings.textContent = `${gameState.allocation.savings}%`;
-        analysisDebt.textContent = `${gameState.allocation.debt}%`;
-        
-        // Challenge result feedback
-        if (gameState.challengeResponse) {
-          const option = gameState.challengeResponse;
-          let resultText = `You chose to ${option.text.toLowerCase()}. `;
-          
-          if (option.id === 1) {
-            if (gameState.allocation.savings >= 10) {
-              resultText += "Smart choice! Using your emergency fund for unexpected expenses is exactly what it's for.";
-            } else {
-              resultText += "This was a good choice, but your emergency fund might be depleted. Consider increasing your savings rate.";
-            }
-          } else if (option.id === 2) {
-            resultText += "Using credit can help in emergencies, but be careful about high-interest debt. Try to pay it off quickly.";
-          } else if (option.id === 3) {
-            resultText += "Reducing expenses to cover emergencies shows financial flexibility, but having savings would be even better.";
-          }
-          
-          challengeResult.textContent = resultText;
-        }
-        
-        // Update achievements display
-        document.querySelectorAll('.achievement').forEach(achievement => {
-          achievement.classList.remove('unlocked');
-        });
-        
-        if (gameState.achievements.firstBudget) {
-          document.querySelector('.achievement:nth-child(1)').classList.add('unlocked');
-        }
-        
-        if (gameState.achievements.savingsPro) {
-          document.querySelector('.achievement:nth-child(2)').classList.add('unlocked');
-        }
-        
-        if (gameState.achievements.perfectBalance) {
-          document.querySelector('.achievement:nth-child(3)').classList.add('unlocked');
-        }
-        
-        if (gameState.achievements.debtDestroyer) {
-          document.querySelector('.achievement:nth-child(4)').classList.add('unlocked');
-        }
-      }
-      
-      // Helper function to add a badge
-      function addBadge(text, type) {
-        const badge = document.createElement('span');
-        badge.className = `badge badge-${type}`;
-        badge.textContent = text;
-        scoreBadges.appendChild(badge);
-      }
-      
-      // Play again button
-      playAgainBtn.addEventListener('click', () => {
-        // Reset game state but keep achievements
-        const achievements = { ...gameState.achievements };
-        
-        // Reset game state
-        Object.assign(gameState, {
-          income: 0,
-          mode: 'custom',
-          scenario: null,
-          difficulty: gameState.difficulty,
-          allocation: {
-            needs: 50,
-            wants: 30,
-            savings: 15,
-            debt: 5
-          },
-          challenge: null,
-          challengeResponse: null,
-          achievements: achievements
-        });
-        
-        // Go back to start screen
-        showScreen(screenStart);
-      });
-      
-      // Share results button
-      shareResultsBtn.addEventListener('click', () => {
-        const shareText = `I scored ${gameState.score}/100 on Budget Boss! My allocation: Needs ${gameState.allocation.needs}%, Wants ${gameState.allocation.wants}%, Savings ${gameState.allocation.savings}%, Debt ${gameState.allocation.debt}%`;
-        
-        // Try to use Web Share API if available
-        if (navigator.share) {
-          navigator.share({
-            title: 'My Budget Boss Score',
-            text: shareText
-          }).catch(() => {
-            // Fallback - copy to clipboard
-            copyToClipboard(shareText);
-            showAlert('Result copied to clipboard!', 'success');
-          });
-        } else {
-          // Fallback - copy to clipboard
-          copyToClipboard(shareText);
-          showAlert('Result copied to clipboard!', 'success');
-        }
-      });
-      
-      // Help button
-      helpBtn.addEventListener('click', () => {
-        helpModal.style.display = 'flex';
-      });
-      
-      // Close modal buttons
-      closeModalBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          btn.closest('.modal-backdrop').style.display = 'none';
-        });
-      });
-      
-      // Helper function to show a screen
-      function showScreen(screen) {
-        // Hide all screens
-        document.querySelectorAll('.screen').forEach(s => {
-          s.classList.remove('active');
-        });
-        
-        // Show the requested screen
-        screen.classList.add('active');
-      }
-      
-      // Helper function to show an alert
-      function showAlert(message, type) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type}`;
-        alertDiv.textContent = message;
-        
-        // Find container and add alert to top
-        const container = document.querySelector('.container');
-        container.insertBefore(alertDiv, container.firstChild);
-        
-        // Remove after 3 seconds
-        setTimeout(() => {
-          alertDiv.remove();
-        }, 3000);
-      }
-      
-      // Helper function to show achievement popup
-      function showAchievement(icon, title, description) {
-        achievementIcon.textContent = icon;
-        achievementTitle.textContent = title;
-        achievementDesc.textContent = description;
-        achievementModal.style.display = 'flex';
-        
-        // Hide after 3 seconds
-        setTimeout(() => {
-          achievementModal.style.display = 'none';
-        }, 3000);
-      }
-      
-      // Helper function to copy text to clipboard
-      function copyToClipboard(text) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-      }
+    <script>
+        // All possible expense items with descriptions, amounts, categories, and explanations
+        const allExpenseItems = [ /* ... (omitted for brevity) ... */ ];
 
-    })();
-  </script>
+        // Game state, helpers, and UI functions (selectRandomItems, showScreen, showNextItem, handleAnswer, endGame, renderResults, etc.)
+
+        // Create confetti for perfect score celebration
+        function createConfetti() {
+            const confetti = document.createElement("div");
+            confetti.className = "confetti";
+            
+            // Random position, color, and size
+            const left = Math.random() * 100;
+            confetti.style.left = `${left}%`;
+            
+            const colors = ["#3498db", "#2ecc71", "#e74c3c", "#f39c12", "#9b59b6", "#1abc9c"];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.backgroundColor = randomColor;
+            
+            const size = Math.random() * 8 + 5; // 5–13px
+            confetti.style.width = `${size}px`;
+            confetti.style.height = `${size}px`;
+            
+            // Random rotation
+            const rotationSpeed = Math.random() * 600 + 400; // 400–1000
+            confetti.style.animation = `confetti-fall ${rotationSpeed/100}s ease-in-out forwards`;
+            
+            document.body.appendChild(confetti);
+        }  // ← closes createConfetti()
+
+        // Initialize event listeners for buttons and category selections
+        // e.g.:
+        // document.getElementById('start-button').addEventListener('click', () => { /* … */ });
+        // document.getElementById('how-to-play').addEventListener('click', () => { /* … */ });
+        // …etc. …
+
+    </script>
 </body>
 </html>

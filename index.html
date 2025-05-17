@@ -8,8 +8,7 @@
     html, body { margin:0; padding:0; width:100%; height:100%; }
     body {
       font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       min-height: 100vh;
     }
     h1, h2 { text-align:center; margin:0.5rem 0; }
@@ -19,56 +18,36 @@
       max-width:800px;
       margin:0 auto;
       padding:2rem 1rem;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
       min-height:80vh;
     }
 
     .mode-container {
       display:grid;
       grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
-      gap:2rem;
-      width:100%;
-      margin-bottom:1.5rem;
+      gap:2rem; width:100%; margin-bottom:1.5rem;
     }
     .mode-container label {
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      cursor:pointer;
+      display:flex; flex-direction:column;
+      align-items:flex-start; cursor:pointer;
     }
     .mode-container input {
-      transform:scale(1.2);
-      margin-bottom:0.3rem;
+      transform:scale(1.2); margin-bottom:0.3rem;
     }
-    .mode-desc {
-      font-size:0.9rem;
-      color:#666;
-    }
+    .mode-desc { font-size:0.9rem; color:#666; }
 
     select, input[type="number"] {
-      width:100%;
-      max-width:260px;
-      padding:0.5rem;
-      font-size:1rem;
-      margin-bottom:1rem;
+      width:100%; max-width:260px;
+      padding:0.5rem; font-size:1rem; margin-bottom:1rem;
     }
     button {
-      width:100%;
-      max-width:300px;
-      font-size:1.2rem;
-      padding:0.8rem;
-      border:none;
-      border-radius:8px;
-      background:#76c7c0;
-      color:#fff;
-      cursor:pointer;
+      width:100%; max-width:300px;
+      font-size:1.2rem; padding:0.8rem;
+      border:none; border-radius:8px;
+      background:#76c7c0; color:#fff; cursor:pointer;
     }
-    button:active {
-      background:#5aa8a0;
-    }
+    button:active { background:#5aa8a0; }
 
     .slider-group { margin:1rem 0; }
     .slider-group label { display:block; margin-bottom:0.3rem; }
@@ -89,9 +68,12 @@
     #progress { height:100%; background:#76c7c0; transform-origin:left; transition:transform 1s linear; }
 
     .decision-buttons { display:flex; flex-direction:column; gap:0.5rem; }
+
     #eventGif { max-width:100%; height:auto; margin:1rem auto; display:block; }
+
     #summaryText, #goalText { text-align:center; margin:0.5rem 0; }
     #finalScore { text-align:center; font-weight:bold; }
+
     footer { text-align:center; margin-top:auto; padding:1rem 0; font-size:0.8rem; color:#666; }
 
     #opt-invest[disabled] { color:#999; }
@@ -100,7 +82,6 @@
   </style>
 </head>
 <body>
-  <!-- Audio & Confetti Canvas -->
   <audio id="lockSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
   <audio id="winSound"  src="https://actions.google.com/sounds/v1/crowds/cheer.ogg"></audio>
   <canvas id="confetti-canvas"></canvas>
@@ -110,9 +91,8 @@
     <h1>🏆 Budget Boss – By Use Money Well LLC</h1>
     <p class="lead">
       Ready to boss your budget?<br>
-      Allocate across Needs, Wants, Savings & Debt—then tackle fun scenario challenges to hit your goal!
+      Allocate across Needs, Wants, Savings &amp; Debt—then tackle fun scenario challenges to hit your goal!
     </p>
-
     <div class="mode-container">
       <label>
         <input type="radio" name="incomeMode" value="custom" checked>
@@ -125,7 +105,6 @@
         <span class="mode-desc">Choose a preset challenge with a clear goal.</span>
       </label>
     </div>
-
     <div id="customInput">
       <input type="number" id="incomeInput" placeholder="Enter monthly income">
     </div>
@@ -136,10 +115,9 @@
         <option value="2500" data-type="invest"  data-goal="400" id="opt-invest" disabled>Start Investing</option>
       </select>
       <p id="unlockNotice" class="hidden">
-        🔒 Unlock Investing by beating both Savings & Debt!
+        🔒 Unlock Investing by beating both Savings &amp; Debt!
       </p>
     </div>
-
     <button id="startBtn">Get Started</button>
   </div>
 
@@ -148,7 +126,6 @@
     <h2>Initial Budget</h2>
     <p id="goalText"></p>
     <p><strong>Income:</strong> $<span id="allocIncome"></span></p>
-
     <div class="slider-group">
       <label>Needs (<span id="initNeedsPct">0</span>%): <span id="initNeedsAmt"></span></label>
       <input type="range" id="initNeeds" min="0" max="100" value="50">
@@ -165,7 +142,6 @@
       <label>Debt (<span id="initDebtPct">0</span>%): <span id="initDebtAmt"></span></label>
       <input type="range" id="initDebt" min="0" max="100" value="0">
     </div>
-
     <button id="allocLockBtn">Lock It In</button>
   </div>
 
@@ -180,7 +156,6 @@
     </div>
     <div id="budgetForm" class="hidden">
       <p><strong>Income:</strong> $<span id="showIncome"></span></p>
-
       <div class="slider-group">
         <label>Needs (<span id="needsPct">0</span>%): <span id="needsAmt"></span></label>
         <input type="range" id="needs" min="0" max="100" value="0">
@@ -197,7 +172,6 @@
         <label>Debt (<span id="debtPct">0</span>%): <span id="debtAmt"></span></label>
         <input type="range" id="debt" min="0" max="100" value="0">
       </div>
-
       <div id="timerBar"><div id="progress"></div></div>
       <button id="lockBtn">Lock Allocation</button>
     </div>
@@ -217,30 +191,57 @@
   <script>
   (function(){
     const scenarioSteps = {
-      savings: [ /* …same as before…*/ ],
-      debt:    [ /* …same as before…*/ ],
-      invest:  [ /* …same as before…*/ ]
+      savings: [
+        { title:"Caramel Latte",    desc:"☕ $5 latte—worth the treat or save it?", delta:-5,   gif:"https://media.giphy.com/media/3o85xE3HLgWUnvzdUc/giphy.gif" },
+        { title:"Work Bonus",       desc:"💰 You get a $200 bonus—celebrate or stash?", delta:+200, gif:"https://media.giphy.com/media/l0HSwmG1Rs8auriVy/giphy.gif" },
+        { title:"Gym Renewal",      desc:"🏋️ $50 gym—fit body or fatter savings?",        delta:-50,  gif:"https://media.giphy.com/media/26n6WywJyh39n1pBu/giphy.gif" },
+        { title:"Grocery Deal",     desc:"🛒 $30 saved on groceries—nice bargain!",        delta:+30,  gif:"https://media.giphy.com/media/3oKIPtjElfqwMOTbH2/giphy.gif" },
+        { title:"Movie Night",      desc:"🎬 $12 tickets—popcorn or pad your savings?",    delta:-12,  gif:"https://media.giphy.com/media/3o7aD4mf0TxmG5Zb6A/giphy.gif" },
+        { title:"Tax Refund",       desc:"🧾 $100 refund—tax time win!",                  delta:+100, gif:"https://media.giphy.com/media/l4FGnTcbGqsTpiJQc/giphy.gif" },
+        { title:"Streaming Splurge",desc:"📺 $8 new service—binge or bank?",              delta:-8,   gif:"https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" }
+      ],
+      debt: [
+        { title:"Minimum Due",      desc:"💳 $100 due—pay up or push back?",            delta:-100, gif:"https://media.giphy.com/media/l2JehQ2GitHGdVG9y/giphy.gif" },
+        { title:"Late Fee",         desc:"⚠️ $20 late fee—ouch!",                       delta:-20,  gif:"https://media.giphy.com/media/3o7ZeTmU77UlPyeR2w/giphy.gif" },
+        { title:"Extra Payment",    desc:"👍 Extra $150 on principal—debt quake!",      delta:-150, gif:"https://media.giphy.com/media/26xBsBhmV0l300t5u/giphy.gif" },
+        { title:"Interest Charge",  desc:"📈 $30 interest—factor it in!",               delta:-30,  gif:"https://media.giphy.com/media/3oz8xIsloV7zOmt81G/giphy.gif" },
+        { title:"Cashback Credit",  desc:"💸 $25 cashback—apply to debt!",               delta:-25,  gif:"https://media.giphy.com/media/3ohhwBP5Ck0e97AA3i/giphy.gif" },
+        { title:"Fee Waiver",       desc:"🎉 Bank waives $50 fee—debt relief!",          delta:+50,  gif:"https://media.giphy.com/media/xT0BKmtQGLbumr5RCM/giphy.gif" },
+        { title:"Balance Transfer", desc:"🔄 Transfer saves $40 interest—smart move!",   delta:+40,  gif:"https://media.giphy.com/media/3ohc13T7ATGCPlvUtC/giphy.gif" }
+      ],
+      invest: [
+        { title:"First Buy",        desc:"📈 Invest $100—growth mode!",                 delta:-100, gif:"https://media.giphy.com/media/l2JehQ2GitHGdVG9y/giphy.gif" },
+        { title:"Dividends",        desc:"💰 Receive $20 dividend—passive income!",     delta:+20,  gif:"https://media.giphy.com/media/l4EpblDYHuggXWpw0/giphy.gif" },
+        { title:"Market Dip",       desc:"📉 Stock dips $50—buy the dip or worry?",      delta:-50,  gif:"https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif" },
+        { title:"Crypto Spike",     desc:"🚀 Crypto gains $80—to the moon!",            delta:+80,  gif:"https://media.giphy.com/media/3o6ZsX3Y7QjWv5dWfe/giphy.gif" },
+        { title:"Broker Fee",       desc:"💸 $10 broker fee—factor it in!",             delta:-10,  gif:"https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif" },
+        { title:"Reinvest",         desc:"🔄 Reinvest $30 dividend—compounding!",       delta:-30,  gif:"https://media.giphy.com/media/3o7aD4mf0TxmG5Zb6A/giphy.gif" },
+        { title:"Bonus Shares",     desc:"🎁 $40 in bonus shares—free money!",          delta:+40,  gif:"https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif" }
+      ]
     };
 
     let income, scenarioType='savings', scenarioGoal=0, steps=[];
     let allocations=[], netDelta=0, currentStep=0, timer;
     const byId=id=>document.getElementById(id);
 
+    // Unlock Investing if savings & debt beaten
     function checkUnlock(){
-      const saved=localStorage.getItem('bb_savingsAchieved')==='true';
-      const debtd=localStorage.getItem('bb_debtAchieved')==='true';
-      const investOpt=byId('opt-invest'), notice=byId('unlockNotice');
-      if(saved&&debtd){
-        investOpt.disabled=false;
-        investOpt.textContent="Start Investing";
+      const saved = localStorage.getItem('bb_savingsAchieved')==='true';
+      const debtd = localStorage.getItem('bb_debtAchieved')==='true';
+      const investOpt = byId('opt-invest');
+      const notice = byId('unlockNotice');
+      if(saved && debtd){
+        investOpt.disabled = false;
+        investOpt.textContent = "Start Investing";
         notice.classList.add('hidden');
       } else {
-        investOpt.disabled=true;
+        investOpt.disabled = true;
         notice.classList.remove('hidden');
       }
     }
     checkUnlock();
 
+    // Toggle custom vs scenario
     document.getElementsByName('incomeMode').forEach(r=>{
       r.onchange=()=>{
         if(r.value==='custom'){
@@ -253,9 +254,148 @@
       };
     });
 
-    // Rebalance helpers & update functions (same as prior code)…
+    // Rebalance helpers & update functions
+    function rebalanceInit(changed){
+      let n=+byId('initNeeds').value, w=+byId('initWants').value,
+          s=+byId('initSave').value, d=+byId('initDebt').value;
+      let sum=n+w+s+d, f=sum?100/sum:0; n*=f; w*=f; s*=f; d*=f;
+      let rN=Math.round(n), rW=Math.round(w), rS=Math.round(s), rD=Math.round(d),
+          diff=100-(rN+rW+rS+rD);
+      if(changed==='initNeeds') rN+=diff;
+      else if(changed==='initWants') rW+=diff;
+      else if(changed==='initSave') rS+=diff;
+      else rD+=diff;
+      byId('initNeeds').value=rN;
+      byId('initWants').value=rW;
+      byId('initSave').value=rS;
+      byId('initDebt').value=rD;
+      updateInitBudget();
+    }
+    ['initNeeds','initWants','initSave','initDebt'].forEach(id=>
+      byId(id).addEventListener('input',()=>rebalanceInit(id))
+    );
+    function updateInitBudget(){
+      const n=+byId('initNeeds').value, w=+byId('initWants').value,
+            s=+byId('initSave').value, d=+byId('initDebt').value;
+      byId('initNeedsPct').textContent=n;
+      byId('initWantsPct').textContent=w;
+      byId('initSavePct').textContent=s;
+      byId('initDebtPct').textContent=d;
+      byId('initNeedsAmt').textContent=`$${Math.round(income*n/100)}`;
+      byId('initWantsAmt').textContent=`$${Math.round(income*w/100)}`;
+      byId('initSaveAmt').textContent=`$${Math.round(income*s/100)}`;
+      byId('initDebtAmt').textContent=`$${Math.round(income*d/100)}`;
+    }
 
-    // Start button
+    function rebalance(changed){
+      let n=+byId('needs').value, w=+byId('wants').value,
+          s=+byId('save').value, d=+byId('debt').value;
+      let sum=n+w+s+d, f=sum?100/sum:0; n*=f; w*=f; s*=f; d*=f;
+      let rN=Math.round(n), rW=Math.round(w), rS=Math.round(s), rD=Math.round(d),
+          diff=100-(rN+rW+rS+rD);
+      if(changed==='needs') rN+=diff;
+      else if(changed==='wants') rW+=diff;
+      else if(changed==='save') rS+=diff;
+      else rD+=diff;
+      byId('needs').value=rN;
+      byId('wants').value=rW;
+      byId('save').value=rS;
+      byId('debt').value=rD;
+      updateBudget();
+    }
+    ['needs','wants','save','debt'].forEach(id=>
+      byId(id).addEventListener('input',e=>rebalance(e.target.id))
+    );
+    function updateBudget(){
+      const n=+byId('needs').value, w=+byId('wants').value,
+            s=+byId('save').value, d=+byId('debt').value;
+      byId('needsPct').textContent=n;
+      byId('wantsPct').textContent=w;
+      byId('savePct').textContent=s;
+      byId('debtPct').textContent=d;
+      byId('needsAmt').textContent=`$${Math.round(income*n/100)}`;
+      byId('wantsAmt').textContent=`$${Math.round(income*w/100)}`;
+      byId('saveAmt').textContent=`$${Math.round(income*s/100)}`;
+      byId('debtAmt').textContent=`$${Math.round(income*d/100)}`;
+    }
+
+    function startTimer(sec=20){
+      clearInterval(timer);
+      let t=sec;
+      byId('progress').style.transform='scaleX(1)';
+      timer=setInterval(()=>{
+        t--;
+        byId('progress').style.transform=`scaleX(${t/sec})`;
+        if(t<=0){ clearInterval(timer); lockStep(true); }
+      },1000);
+    }
+
+    function lockStep(adjusted){
+      byId('lockSound').play();
+      clearInterval(timer);
+      allocations[currentStep] = adjusted
+        ? { n:+byId('needs').value, w:+byId('wants').value,
+            s:+byId('save').value, d:+byId('debt').value }
+        : allocations[currentStep-1];
+      netDelta += steps[currentStep].delta;
+      currentStep++;
+      showNext();
+    }
+
+    function showNext(){
+      if(currentStep>=steps.length) return showSummary();
+      byId('screen-start').classList.add('hidden');
+      byId('screen-alloc').classList.add('hidden');
+      byId('screen-summary').classList.add('hidden');
+      byId('screen-step').classList.remove('hidden');
+      byId('budgetForm').classList.add('hidden');
+      byId('keepBtn').parentElement.classList.remove('hidden');
+
+      const st = steps[currentStep];
+      byId('stepTitle').textContent = st.title;
+      byId('stepDesc').textContent  = st.desc;
+      byId('eventGif').src          = st.gif;
+      byId('eventGif').classList.remove('hidden');
+      byId('showIncome').textContent= income;
+
+      const prev = allocations[currentStep] || allocations[0];
+      byId('needs').value = prev.n;
+      byId('wants').value= prev.w;
+      byId('save').value = prev.s;
+      byId('debt').value = prev.d;
+      updateBudget();
+    }
+
+    function showSummary(){
+      byId('screen-step').classList.add('hidden');
+      byId('screen-summary').classList.remove('hidden');
+      const last = allocations[allocations.length-1];
+      let finalAmt, label;
+      if(scenarioType==='debt'){
+        finalAmt = Math.round(income * last.d/100);
+        label    = 'Debt Paid';
+      } else {
+        finalAmt = Math.round(income * last.s/100) + netDelta;
+        label    = scenarioType==='invest' ? 'Invested' : 'Saved';
+      }
+      const ideal = scenarioGoal;
+      const score = Math.max(0, 100 - Math.round(Math.abs(finalAmt-ideal)/ideal*100));
+
+      byId('summaryText').innerHTML =
+        `Final ${label}: <strong>$${finalAmt}</strong><br>Goal: <strong>$${ideal}</strong>`;
+      byId('finalScore').textContent = `Score: ${score}/100`;
+
+      if(score>=80){
+        if(scenarioType==='savings') localStorage.setItem('bb_savingsAchieved','true');
+        if(scenarioType==='debt')     localStorage.setItem('bb_debtAchieved','true');
+        if(scenarioType==='invest')   localStorage.setItem('bb_investAchieved','true');
+        byId('winSound').play();
+        confetti.create(byId('confetti-canvas'),{resize:true})({particleCount:200});
+      }
+      checkUnlock();
+    }
+
+    // START GAME
     byId('startBtn').onclick=()=>{
       if(document.querySelector('input[name="incomeMode"]:checked').value==='custom'){
         income=+byId('incomeInput').value;
@@ -273,9 +413,9 @@
       byId('screen-alloc').classList.remove('hidden');
       byId('allocIncome').textContent=income;
       byId('goalText').textContent=
-        scenarioType==='debt' ? `Goal: Minimize $${scenarioGoal} debt` :
-        scenarioType==='invest'? `Goal: Invest $${scenarioGoal}` :
-                                `Goal: Save $${scenarioGoal}`;
+        scenarioType==='debt'    ? `Goal: Minimize $${scenarioGoal} debt` :
+        scenarioType==='invest'  ? `Goal: Invest $${scenarioGoal}` :
+                                  `Goal: Save $${scenarioGoal}`;
       updateInitBudget();
       allocations=[{
         n:+byId('initNeeds').value,
@@ -286,8 +426,16 @@
       currentStep=1; netDelta=0;
     };
 
-    // …rest of your logic unmodified…
-
+    // BUTTON HOOKS
+    byId('allocLockBtn').onclick=()=>{ byId('screen-alloc').classList.add('hidden'); showNext(); };
+    byId('keepBtn').onclick     =()=> lockStep(false);
+    byId('adjustBtn').onclick   =()=>{
+      byId('keepBtn').parentElement.classList.add('hidden');
+      byId('budgetForm').classList.remove('hidden');
+      startTimer();
+    };
+    byId('lockBtn').onclick     =()=> lockStep(true);
+    byId('restart').onclick     =()=> location.reload();
   })();
   </script>
 </body>

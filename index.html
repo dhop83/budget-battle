@@ -1,414 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Budget Battle</title>
-  <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; }
-    body {
-      font-family: sans-serif;
-      padding:1rem;
-      box-sizing:border-box;
-      display:flex;
-      flex-direction:column;
-      min-height:100vh;
-    }
-    h1,h2 { text-align:center; margin:.5rem 0; }
-    .hidden { display:none; }
-    .slider-group { margin:1rem 0; }
-    .slider-group label { display:block; margin-bottom:.3rem; }
-    input[type=range] {
-      -webkit-appearance:none;
-      width:100%; height:2rem; background:transparent;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance:none;
-      width:1.5rem; height:1.5rem; border-radius:50%;
-      background:#76c7c0; margin-top:-.3rem;
-    }
-    input[type=range]::-webkit-slider-runnable-track {
-      height:.3rem; background:#ddd; border-radius:.2rem;
-    }
-    button {
-      width:100%; padding:.8rem; margin:.5rem 0;
-      font-size:1rem; border:none; border-radius:6px;
-      background:#76c7c0; color:#fff; cursor:pointer;
-    }
-    button:active { background:#5aa8a0; }
-    #timerBar {
-      width:100%; height:.5rem; background:#eee;
-      border-radius:.3rem; overflow:hidden; margin:.5rem 0;
-    }
-    #progress {
-      height:100%; background:#76c7c0;
-      transform-origin:left; transition:transform 1s linear;
-    }
-    .decision-buttons { display:flex; flex-direction:column; gap:.5rem; }
-    #eventGif { max-width:100%; height:auto; margin:1rem auto; display:block; }
-    #summaryText,#goalText { text-align:center; margin:.5rem 0; }
-    #finalScore { text-align:center; font-weight:bold; }
-    footer { text-align:center; margin-top:auto; font-size:.8rem; color:#666; }
-    #opt-invest[disabled] { color:#999; }
-    #unlockNotice { text-align:center; color:#a00; font-size:.9rem; margin-top:-.5rem; }
-    @media (min-width:600px){ body{ max-width:600px; margin:0 auto;} }
-  </style>
-</head>
-<body>
-  <audio id="lockSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-  <audio id="winSound"  src="https://actions.google.com/sounds/v1/crowds/cheer.ogg"></audio>
-  <canvas id="confetti-canvas"></canvas>
+<style>
+  /* --- Add these to your existing <style> block --- */
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 4vh 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #screen-start h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  #screen-start p.lead {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    color: #444;
+    text-align: center;
+    line-height: 1.4;
+  }
+  #screen-start .options {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+  }
+  #screen-start .options label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  #screen-start input[type="radio"] {
+    transform: scale(1.2);
+  }
+  #screen-start select,
+  #screen-start input[type="number"] {
+    width: 220px;
+    padding: 0.5rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  #screen-start button {
+    width: 100%;
+    max-width: 300px;
+    font-size: 1.2rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+  }
+  #unlockNotice {
+    margin-top: -0.5rem;
+    margin-bottom: 1.5rem;
+  }
+</style>
 
-  <!-- START -->
-  <div id="screen-start">
-    <h1>🏆 Budget Battle</h1>
-    <p style="text-align:center; font-style:italic;">
-      Fun, fast, and fierce—see if you can hit your money goal!
+<!-- Replace your existing #screen-start with this -->
+<div id="screen-start" class="container">
+  <h1>🏆 Budget Boss</h1>
+  <p class="lead">
+    Ready to boss your money?<br>
+    Allocate your income across Needs, Wants, Savings &amp; Debt—then tackle scenario challenges to hit your goal!
+  </p>
+
+  <div class="options">
+    <label>
+      <input type="radio" name="incomeMode" value="custom" checked>
+      My Income
+    </label>
+    <label>
+      <input type="radio" name="incomeMode" value="scenario">
+      Scenario
+    </label>
+  </div>
+
+  <div id="customInput">
+    <input type="number" id="incomeInput" placeholder="Enter monthly income">
+  </div>
+  <div id="scenarioInput" class="hidden">
+    <select id="scenarioSelect">
+      <option value="3000" data-type="savings" data-goal="600">
+        Alex: $3,000 (Savings)
+      </option>
+      <option value="4500" data-type="debt" data-goal="500">
+        Taylor: $4,500 (Debt)
+      </option>
+      <option value="2500" data-type="invest" data-goal="400" id="opt-invest" disabled>
+        Jordan: $2,500 (Investing)
+      </option>
+    </select>
+    <p id="unlockNotice" class="hidden">
+      🔒 Unlock Investing by beating both Savings &amp; Debt!
     </p>
-    <p style="text-align:center;">Enter income or pick a scenario:</p>
-    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
-      <label style="flex:1; min-width:120px;">
-        <input type="radio" name="incomeMode" value="custom" checked> My Income
-      </label>
-      <label style="flex:1; min-width:120px;">
-        <input type="radio" name="incomeMode" value="scenario"> Scenario
-      </label>
-    </div>
-    <div id="customInput">
-      <input type="number" id="incomeInput" placeholder="e.g. 3500">
-    </div>
-    <div id="scenarioInput" class="hidden">
-      <select id="scenarioSelect">
-        <option value="3000" data-type="savings" data-goal="600">
-          Alex: $3,000 (Savings)
-        </option>
-        <option value="4500" data-type="debt" data-goal="500">
-          Taylor: $4,500 (Debt)
-        </option>
-        <option value="2500" data-type="invest" data-goal="400" id="opt-invest" disabled>
-          Jordan: $2,500 (Investing)
-        </option>
-      </select>
-      <p id="unlockNotice" class="hidden">
-        🔒 Unlock Investing by beating both Savings & Debt!
-      </p>
-    </div>
-    <button id="startBtn">Let’s Go!</button>
   </div>
 
-  <!-- ALLOCATION -->
-  <div id="screen-alloc" class="hidden">
-    <h2>Initial Budget</h2>
-    <p id="goalText"></p>
-    <p><strong>Income:</strong> $<span id="allocIncome"></span></p>
-    <div class="slider-group">
-      <label>Needs (<span id="initNeedsPct">0</span>%): <span id="initNeedsAmt"></span></label>
-      <input type="range" id="initNeeds" min="0" max="100" value="50">
-    </div>
-    <div class="slider-group">
-      <label>Wants (<span id="initWantsPct">0</span>%): <span id="initWantsAmt"></span></label>
-      <input type="range" id="initWants" min="0" max="100" value="30">
-    </div>
-    <div class="slider-group">
-      <label>Savings (<span id="initSavePct">0</span>%): <span id="initSaveAmt"></span></label>
-      <input type="range" id="initSave" min="0" max="100" value="20">
-    </div>
-    <div class="slider-group">
-      <label>Debt (<span id="initDebtPct">0</span>%): <span id="initDebtAmt"></span></label>
-      <input type="range" id="initDebt" min="0" max="100" value="0">
-    </div>
-    <button id="allocLockBtn">Lock It In</button>
-  </div>
-
-  <!-- STEPS -->
-  <div id="screen-step" class="hidden">
-    <h2 id="stepTitle"></h2>
-    <img id="eventGif" class="hidden" alt="Event">
-    <p id="stepDesc"></p>
-    <div class="decision-buttons">
-      <button id="keepBtn">Keep Allocation</button>
-      <button id="adjustBtn">Rebalance</button>
-    </div>
-    <div id="budgetForm" class="hidden">
-      <p><strong>Income:</strong> $<span id="showIncome"></span></p>
-      <div class="slider-group">
-        <label>Needs (<span id="needsPct">0</span>%): <span id="needsAmt"></span></label>
-        <input type="range" id="needs" min="0" max="100" value="0">
-      </div>
-      <div class="slider-group">
-        <label>Wants (<span id="wantsPct">0</span>%): <span id="wantsAmt"></span></label>
-        <input type="range" id="wants" min="0" max="100" value="0">
-      </div>
-      <div class="slider-group">
-        <label>Savings (<span id="savePct">0</span>%): <span id="saveAmt"></span></label>
-        <input type="range" id="save" min="0" max="100" value="0">
-      </div>
-      <div class="slider-group">
-        <label>Debt (<span id="debtPct">0</span>%): <span id="debtAmt"></span></label>
-        <input type="range" id="debt" min="0" max="100" value="0">
-      </div>
-      <div id="timerBar"><div id="progress"></div></div>
-      <button id="lockBtn">Lock Allocation</button>
-    </div>
-  </div>
-
-  <!-- SUMMARY -->
-  <div id="screen-summary" class="hidden">
-    <h2>🎉 Battle Summary</h2>
-    <p id="summaryText"></p>
-    <p id="finalScore"></p>
-    <button id="restart">Play Again</button>
-  </div>
-
-  <footer>© 2025 Use Money Well LLC. All Rights Reserved</footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-  <script>
-  (function(){
-    // Scenario-specific steps
-    const scenarioSteps = {
-      savings: [
-        { title:"Caramel Latte",   desc:"☕ You grab a $5 caramel latte—decide if it's worth it!", delta:-5,   gif:"https://media.giphy.com/media/3o85xE3HLgWUnvzdUc/giphy.gif" },
-        { title:"Work Bonus",      desc:"💰 You score a $200 bonus—celebrate or save it?",          delta:+200, gif:"https://media.giphy.com/media/l0HSwmG1Rs8auriVy/giphy.gif" },
-        { title:"Gym Renewal",     desc:"🏋️‍♀️ Gym renewal is $50—fit body or fatter wallet?",      delta:-50,  gif:"https://media.giphy.com/media/26n6WywJyh39n1pBu/giphy.gif" },
-        { title:"Grocery Deal",    desc:"🛒 You save $30 on groceries—nice bargain boost!",         delta:+30,  gif:"https://media.giphy.com/media/3oKIPtjElfqwMOTbH2/giphy.gif" },
-        { title:"Movie Night",     desc:"🎬 Tickets cost $12—popcorn or pad your savings?",         delta:-12,  gif:"https://media.giphy.com/media/3o7aD4mf0TxmG5Zb6A/giphy.gif" },
-        { title:"Tax Refund",      desc:"🧾 You get a $100 tax refund—tax time win!",               delta:+100, gif:"https://media.giphy.com/media/l4FGnTcbGqsTpiJQc/giphy.gif" },
-        { title:"Streaming Splurge",desc:"📺 A new subscription is $8—binge or bank?",             delta:-8,   gif:"https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" }
-      ],
-      debt: [
-        { title:"Minimum Due",     desc:"💳 Credit card minimum $100—pay up or push back?",       delta:-100, gif:"https://media.giphy.com/media/l2JehQ2GitHGdVG9y/giphy.gif" },
-        { title:"Late Fee",        desc:"⚠️ Oops, a $20 late fee hits—ouch!",                    delta:-20,  gif:"https://media.giphy.com/media/3o7ZeTmU77UlPyeR2w/giphy.gif" },
-        { title:"Extra Payment",   desc:"👍 You throw an extra $150 at principal—debt quake!",   delta:-150, gif:"https://media.giphy.com/media/26xBsBhmV0l300t5u/giphy.gif" },
-        { title:"Interest Charge", desc:"📈 Interest of $30 accrues—factor it in!",              delta:-30,  gif:"https://media.giphy.com/media/3o7ZeTmU77UlPyeR2w/giphy.gif" },
-        { title:"Cashback Credit", desc:"💸 You earn $25 cashback—apply to debt!",               delta:-25,  gif:"https://media.giphy.com/media/3ohhwBP5Ck0e97AA3i/giphy.gif" },
-        { title:"Fee Waiver",      desc:"🎉 Bank waives $50 fee—debt relief!",                   delta:+50,  gif:"https://media.giphy.com/media/xT0BKmtQGLbumr5RCM/giphy.gif" },
-        { title:"Balance Transfer",desc:"🔄 Transfer saves $40 in interest—smart move!",         delta:+40,  gif:"https://media.giphy.com/media/3ohc13T7ATGCPlvUtC/giphy.gif" }
-      ],
-      invest: [
-        { title:"First Buy",       desc:"📈 You invest $100 in stocks—growth mode!",             delta:-100, gif:"https://media.giphy.com/media/l2JehQ2GitHGdVG9y/giphy.gif" },
-        { title:"Dividends",       desc:"💰 You receive $20 dividend—hello, passive income!",    delta:+20,  gif:"https://media.giphy.com/media/l4EpblDYHuggXWpw0/giphy.gif" },
-        { title:"Market Dip",      desc:"📉 Stock dips $50—buy the dip or watch and worry?",     delta:-50,  gif:"https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif" },
-        { title:"Crypto Spike",    desc:"🚀 Crypto gains $80—rocket to the moon!",               delta:+80,  gif:"https://media.giphy.com/media/3o6ZsX3Y7QjWv5dWfe/giphy.gif" },
-        { title:"Broker Fee",      desc:"💸 Broker charges $10—factor fees into your plan!",     delta:-10,  gif:"https://media.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif" },
-        { title:"Reinvest",        desc:"🔄 You reinvest $30 dividend—compounding!",             delta:-30,  gif:"https://media.giphy.com/media/3o7aD4mf0TxmG5Zb6A/giphy.gif" },
-        { title:"Bonus Shares",    desc:"🎁 You get $40 in bonus shares—free money!",            delta:+40,  gif:"https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif" }
-      ]
-    };
-
-    let income, scenarioType='savings', scenarioGoal=0, steps=[];
-    let allocations = [], netDelta=0, currentStep=0, timer;
-    const byId = id=>document.getElementById(id);
-
-    // Unlock invest if saved & debt beaten
-    function checkUnlock(){
-      const saved = localStorage.getItem('bb_savingsAchieved')==='true';
-      const debtd = localStorage.getItem('bb_debtAchieved')==='true';
-      const investOpt = byId('opt-invest');
-      const notice    = byId('unlockNotice');
-      if(saved && debtd){
-        investOpt.disabled = false;
-        investOpt.textContent = "Jordan: $2,500 (Investing)";
-        notice.classList.add('hidden');
-      } else {
-        investOpt.disabled = true;
-        notice.classList.remove('hidden');
-      }
-    }
-    checkUnlock();
-
-    // Toggle input mode
-    document.getElementsByName('incomeMode').forEach(r=>{
-      r.onchange = ()=>{
-        if(r.value==='custom' && r.checked){
-          byId('customInput').classList.remove('hidden');
-          byId('scenarioInput').classList.add('hidden');
-        } else {
-          byId('scenarioInput').classList.remove('hidden');
-          byId('customInput').classList.add('hidden');
-        }
-      };
-    });
-
-    // Rebalance & update functions (same for init & steps)
-    function rebalanceInit(changed){
-      let n=+byId('initNeeds').value, w=+byId('initWants').value,
-          s=+byId('initSave').value, d=+byId('initDebt').value;
-      let sum=n+w+s+d, f=sum?100/sum:0;
-      n*=f; w*=f; s*=f; d*=f;
-      let rN=Math.round(n), rW=Math.round(w), rS=Math.round(s), rD=Math.round(d),
-          diff=100-(rN+rW+rS+rD);
-      if(changed==='initNeeds') rN+=diff;
-      else if(changed==='initWants') rW+=diff;
-      else if(changed==='initSave') rS+=diff;
-      else rD+=diff;
-      ['initNeeds','initWants','initSave','initDebt'].forEach((id,val)=>
-        byId(id).value = {initNeeds:rN,initWants:rW,initSave:rS,initDebt:rD}[id]
-      );
-      updateInitBudget();
-    }
-    ['initNeeds','initWants','initSave','initDebt']
-      .forEach(id=>byId(id).addEventListener('input',()=>rebalanceInit(id)));
-
-    function updateInitBudget(){
-      const n=+byId('initNeeds').value, w=+byId('initWants').value,
-            s=+byId('initSave').value, d=+byId('initDebt').value;
-      byId('initNeedsPct').textContent=n;
-      byId('initWantsPct').textContent=w;
-      byId('initSavePct').textContent=s;
-      byId('initDebtPct').textContent=d;
-      byId('initNeedsAmt').textContent=`$${Math.round(income*n/100)}`;
-      byId('initWantsAmt').textContent=`$${Math.round(income*w/100)}`;
-      byId('initSaveAmt').textContent=`$${Math.round(income*s/100)}`;
-      byId('initDebtAmt').textContent=`$${Math.round(income*d/100)}`;
-    }
-
-    function rebalance(changed){
-      let n=+byId('needs').value, w=+byId('wants').value,
-          s=+byId('save').value, d=+byId('debt').value;
-      let sum=n+w+s+d, f=sum?100/sum:0;
-      n*=f; w*=f; s*=f; d*=f;
-      let rN=Math.round(n), rW=Math.round(w), rS=Math.round(s), rD=Math.round(d),
-          diff=100-(rN+rW+rS+rD);
-      if(changed==='needs') rN+=diff;
-      else if(changed==='wants') rW+=diff;
-      else if(changed==='save') rS+=diff;
-      else rD+=diff;
-      ['needs','wants','save','debt'].forEach((id,val)=>
-        byId(id).value = {needs:rN,wants:rW,save:rS,debt:rD}[id]
-      );
-      updateBudget();
-    }
-    ['needs','wants','save','debt']
-      .forEach(id=>byId(id).addEventListener('input',e=>rebalance(e.target.id)));
-
-    function updateBudget(){
-      const n=+byId('needs').value, w=+byId('wants').value,
-            s=+byId('save').value, d=+byId('debt').value;
-      byId('needsPct').textContent=n;
-      byId('wantsPct').textContent=w;
-      byId('savePct').textContent=s;
-      byId('debtPct').textContent=d;
-      byId('needsAmt').textContent=`$${Math.round(income*n/100)}`;
-      byId('wantsAmt').textContent=`$${Math.round(income*w/100)}`;
-      byId('saveAmt').textContent=`$${Math.round(income*s/100)}`;
-      byId('debtAmt').textContent=`$${Math.round(income*d/100)}`;
-    }
-
-    function startTimer(sec=20){
-      clearInterval(timer);
-      let t=sec;
-      byId('progress').style.transform='scaleX(1)';
-      timer=setInterval(()=>{
-        t--;
-        byId('progress').style.transform=`scaleX(${t/sec})`;
-        if(t<=0){ clearInterval(timer); lockStep(true); }
-      },1000);
-    }
-
-    function lockStep(adjusted){
-      byId('lockSound').play();
-      clearInterval(timer);
-      allocations[currentStep] = adjusted
-        ? { n:+byId('needs').value, w:+byId('wants').value,
-            s:+byId('save').value, d:+byId('debt').value }
-        : allocations[currentStep-1];
-      netDelta += steps[currentStep].delta;
-      currentStep++;
-      showNext();
-    }
-
-    function showNext(){
-      if(currentStep>=steps.length) return showSummary();
-      byId('screen-start').classList.add('hidden');
-      byId('screen-alloc').classList.add('hidden');
-      byId('screen-summary').classList.add('hidden');
-      byId('screen-step').classList.remove('hidden');
-      byId('budgetForm').classList.add('hidden');
-      byId('keepBtn').parentElement.classList.remove('hidden');
-
-      const st = steps[currentStep];
-      byId('stepTitle').textContent = st.title;
-      byId('stepDesc').textContent  = st.desc;
-      byId('eventGif').src          = st.gif;
-      byId('eventGif').classList.remove('hidden');
-      byId('showIncome').textContent= income;
-
-      const prev = allocations[currentStep] || allocations[0];
-      ['needs','wants','save','debt'].forEach(k=>
-        byId(k).value = prev[k]
-      );
-      updateBudget();
-    }
-
-    function showSummary(){
-      byId('screen-step').classList.add('hidden');
-      byId('screen-summary').classList.remove('hidden');
-      const last = allocations[allocations.length-1];
-      let finalAmt, label;
-      if(scenarioType==='debt'){
-        finalAmt = Math.round(income * last.d/100);
-        label    = 'Debt Paid';
-      } else {
-        finalAmt = Math.round(income * last.s/100) + netDelta;
-        label    = scenarioType==='invest' ? 'Invested' : 'Saved';
-      }
-      const ideal = scenarioGoal;
-      const score = Math.max(0, 100 - Math.round(Math.abs(finalAmt-ideal)/ideal*100));
-
-      byId('summaryText').innerHTML =
-        `Final ${label}: <strong>$${finalAmt}</strong><br>Goal: <strong>$${ideal}</strong>`;
-      byId('finalScore').textContent = `Score: ${score}/100`;
-
-      if(score>=80){
-        if(scenarioType==='savings') localStorage.setItem('bb_savingsAchieved','true');
-        if(scenarioType==='debt')     localStorage.setItem('bb_debtAchieved','true');
-        if(scenarioType==='invest')  localStorage.setItem('bb_investAchieved','true');
-        byId('winSound').play();
-        confetti.create(byId('confetti-canvas'),{resize:true})({particleCount:200});
-      }
-      checkUnlock();
-    }
-
-    // START
-    byId('startBtn').onclick = ()=>{
-      if(document.querySelector('input[name="incomeMode"]:checked').value==='custom'){
-        income = +byId('incomeInput').value;
-        scenarioType = 'savings';
-        scenarioGoal = Math.round(income * 0.2);
-      } else {
-        const sel = byId('scenarioSelect');
-        const opt= sel.options[sel.selectedIndex];
-        income = +opt.value;
-        scenarioType = opt.dataset.type;
-        scenarioGoal = +opt.dataset.goal;
-      }
-      if(!income) return alert('Enter a valid income.');
-      steps = scenarioSteps[scenarioType];
-      byId('screen-start').classList.add('hidden');
-      byId('screen-alloc').classList.remove('hidden');
-      byId('allocIncome').textContent = income;
-      byId('goalText').textContent =
-        scenarioType==='debt'   ? `Goal: Pay $${scenarioGoal} debt` :
-        scenarioType==='invest'? `Goal: Invest $${scenarioGoal}` :
-                                `Goal: Save $${scenarioGoal}`;
-      updateInitBudget();
-      allocations = [{ n:+byId('initNeeds').value, w:+byId('initWants').value,
-                       s:+byId('initSave').value, d:+byId('initDebt').value }];
-      currentStep = 1; netDelta = 0;
-    };
-
-    byId('allocLockBtn').onclick = ()=> { byId('screen-alloc').classList.add('hidden'); showNext(); };
-    byId('keepBtn').onclick      = ()=> lockStep(false);
-    byId('adjustBtn').onclick    = ()=> {
-      byId('keepBtn').parentElement.classList.add('hidden');
-      byId('budgetForm').classList.remove('hidden');
-      startTimer();
-    };
-    byId('lockBtn').onclick      = ()=> lockStep(true);
-    byId('restart').onclick      = ()=> location.reload();
-
-  })();
-  </script>
-</body>
-</html>
+  <button id="startBtn">Let’s Go!</button>
+</div>

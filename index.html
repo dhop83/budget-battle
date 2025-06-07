@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Budget Master - Financial Life Simulator</title>
     <style>
-        /* [CSS unchanged, as in your original file] */
         * {
             margin: 0;
             padding: 0;
@@ -341,6 +340,7 @@
                 <h2>🎉 Game Complete!</h2>
                 <div class="score-breakdown" id="final-scores"></div>
                 <div id="final-feedback" style="margin: 20px 0; font-size: 1.1em; line-height: 1.6;"></div>
+                <div id="final-summary" style="margin: 20px 0; background: #f8f9ff; border-radius: 12px; padding: 20px; border-left: 5px solid #667eea; font-size: 1em; line-height: 1.7;"></div>
                 <div style="text-align: center; margin-top: 30px;">
                     <button class="btn" onclick="restartGame()">Play Again</button>
                     <button class="btn btn-secondary" onclick="showWelcome()">Main Menu</button>
@@ -625,13 +625,52 @@
                     <div class="stat-label">Debt Accrued</div>
                 </div>
             `;
-            // Feedback
+            // Main Feedback
             let feedback = '';
             if (gameState.score >= 120) feedback = "Outstanding! You handled life's financial curveballs like a pro.";
             else if (gameState.score >= 100) feedback = "Great job! You made mostly wise financial choices.";
             else if (gameState.score >= 80) feedback = "Good effort. Review your decisions for areas to improve.";
             else feedback = "Consider revisiting your budgeting and emergency planning strategies.";
             document.getElementById('final-feedback').textContent = feedback;
+
+            // Personalized Summary
+            let summary = "";
+            // Emergency fund analysis
+            if (gameState.savings >= 3 * (gameState.income * 0.6)) {
+                summary += "✅ <b>Emergency Fund:</b> You maintained a strong emergency fund. This is key for financial resilience.<br>";
+            } else if (gameState.savings >= gameState.income) {
+                summary += "🟡 <b>Emergency Fund:</b> You have some emergency savings, but building it up to cover 3-6 months of expenses is ideal.<br>";
+            } else {
+                summary += "⚠️ <b>Emergency Fund:</b> Your emergency savings are low. Prioritize building this safety net to handle future surprises.<br>";
+            }
+            // Debt analysis
+            if (gameState.debt === 0) {
+                summary += "✅ <b>Debt:</b> You avoided unnecessary debt. Great job managing your obligations.<br>";
+            } else if (gameState.debt < 1000) {
+                summary += "🟡 <b>Debt:</b> You took on a small amount of debt. Aim to pay it off quickly to avoid interest costs.<br>";
+            } else {
+                summary += "⚠️ <b>Debt:</b> You accrued significant debt. Make a plan to reduce your debt and avoid high-interest payments.<br>";
+            }
+            // Budgeting analysis
+            let essentials = 0, savingsAlloc = 0;
+            budgetCategories.forEach(cat => {
+                if (cat.essential) essentials += (gameState.budget[cat.id] || 0);
+                if (cat.id === "savings") savingsAlloc = (gameState.budget[cat.id] || 0);
+            });
+            if (essentials / gameState.income > 0.5) {
+                summary += "🟡 <b>Budget:</b> Most of your income went to essentials. Look for ways to reduce fixed costs and increase savings.<br>";
+            } else {
+                summary += "✅ <b>Budget:</b> You balanced essentials and discretionary spending well.<br>";
+            }
+            if (savingsAlloc / gameState.income >= 0.1) {
+                summary += "✅ <b>Savings Rate:</b> You consistently set aside at least 10% of your income. Keep it up!<br>";
+            } else {
+                summary += "🟡 <b>Savings Rate:</b> Try to save at least 10% of your income each month.<br>";
+            }
+            // Final tip
+            summary += "<br><b>Next Steps:</b> Review your real-life budget, automate savings, and revisit your goals regularly. Financial health is a journey—keep learning and adapting!";
+
+            document.getElementById('final-summary').innerHTML = summary;
         }
         function restartGame() {
             startGame();
